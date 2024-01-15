@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Website Title</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(to bottom, #6fa9f5, #0077cc); /* Light blue to dark blue gradient */
+            color: #fff; /* White text */
+        }
+
+        header {
+           
+            color: #fff;
+            text-align: center;
+            padding: 20px;
+            margin-bottom: 20px; /* Increase space between title and buttons */
+            position: relative;
+        }
+
+        h1 {
+            margin: 0; /* Remove default margin for h1 */
+        }
+
+        .social-icons {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px; /* Increase space between social icons and the email button */
+        }
+
+        .social-icons a {
+            margin: 0 10px; /* Adjust the spacing between social icons */
+            text-decoration: none;
+        }
+
+        .social-icons img {
+            width: 30px; /* Adjust the width of social icons */
+            border-radius: 50%; /* Make the images circular */
+            transition: transform 0.3s ease; /* Smooth transitions on hover */
+        }
+
+        .social-icons img:hover {
+            transform: scale(1.2); /* Enlarge the image on hover */
+        }
+
+        .logo-container {
+            background: linear-gradient(to bottom, #6fa9f5, #0077cc); /* Match the website background */
+            padding: 20px; /* Adjust the padding as needed */
+            text-align: center;
+        }
+
+        .logo {
+            max-width: 100px; /* Adjust the maximum width of the logo */
+            display: block;
+            margin: 0 auto; /* Center the logo within the container */
+        }
+
+        .email-button {
+            width: 200px;
+            height: 50px;
+            background-color: #ff9900; /* Different color for the email button */
+            color: #fff;
+            text-align: center;
+            line-height: 50px;
+            display: block;
+            text-decoration: none;
+            border: 2px solid #ff9900; /* Border for the email button */
+            border-radius: 10px; /* Rounded corners */
+            margin: 30px auto; /* Increase space between logo and email button */
+            transition: background-color 0.3s ease, outline 0.3s ease; /* Smooth transitions */
+        }
+
+        .email-button:hover {
+            background-color: #cc7a00; /* Darker color on hover */
+            outline: 2px solid #cc7a00; /* Outline color on hover */
+        }
+
+        main {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 60vh;
+            flex-direction: column;
+        }
+
+        .button-container {
+            margin: 10px;
+        }
+
+        .button {
+            width: 250px;
+            height: 100px;
+            background-color: #007bff;
+            color: #fff;
+            text-align: center;
+            line-height: 50px;
+            display: block;
+            text-decoration: none;
+            border: 2px solid #007bff; /* Border for the link buttons */
+            border-radius: 10px; /* Rounded corners */
+            outline: 2px solid transparent; /* Outline for the link buttons (initially transparent) */
+            transition: background-color 0.3s ease, outline 0.3s ease; /* Smooth transitions */
+            font-size: 14px; /* Decrease font size for more text */
+        }
+
+        .button:hover {
+            background-color: #0056b3; /* Lighter blue on hover */
+            outline: 2px solid #0056b3; /* Outline color on hover */
+        }
+
+        footer {
+            
+            color: #fff;
+            text-align: center;
+            padding: 10px;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>Vestgaard Construction</h1>
+        <div class="social-icons">
+            <a href="https://www.tiktok.com/@vestgaardconstruction" target="_blank"><img src="tiktokicon.png" alt="tiktok"></a>
+            <a href="https://www.youtube.com/channel/UCnDDDNAO48EFtACnDyd4-aA" target="_blank"><img src="youtube.png" alt="youtube"></a>
+            <a href="https://twitter.com/vestgaardltd/status/1729952362968895849?s=42&t=0VeGwAqQVBSi31yna7O2Kw" target="_blank"><img src="twitter.png" alt="twitter"></a>
+            <!-- Replace the above paths with the actual paths to your social media icons -->
+            </div>
+    </header>
+
+    <img src="logo.png" alt="Logo" class="logo">
+
+    <a href="mailto:your@email.com" class="email-button">Email us</a>
+
+    <main>
+        <div class="button-container">
+            <a href="https://amzn.to/48Ef5i4" class="button">Occidental Leather 8-Inch Deep Bag: $194.85</a>
+            
+        </div>
+        <div class="button-container">
+            <a href="https://example2.com" class="button">Link 2</a>
+        </div>
+        <div class="button-container">
+            <a href="https://example3.com" class="button">Link 3</a>
+        </div>
+        <!-- Add more buttons as needed -->
+    </main>
+
+    <footer>
+        <p>Disclaimer: The links below are affiliate links.</p>
+    </footer>
+</body>
+
+</html>
