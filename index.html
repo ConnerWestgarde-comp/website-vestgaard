@@ -81,6 +81,13 @@
             outline: 2px solid #cc7a00; /* Outline color on hover */
         }
 
+        .hiring-title {
+            font-size: 24px; /* Adjust font size */
+            margin-bottom: 10px; /* Add space between the hiring title and the email button */
+            color: rgb(255, 255, 255); /* Different color for the hiring title */
+            text-align: center; /* Center the hiring title */
+        }
+
         main {
             display: flex;
             align-items: center;
@@ -113,6 +120,12 @@
             background-color: #0056b3; /* Lighter blue on hover */
             outline: 2px solid #0056b3; /* Outline color on hover */
         }
+        .button img {
+            max-width: 40px; /* Set the maximum width of the image */
+            margin-right: 100px; /* Add right margin to separate the image and button text */
+            border-radius: 40%; /* Make the image circular */
+            max-height: 40px;
+        }
 
         footer {
             
@@ -139,24 +152,35 @@
 
     <img src="logo.png" alt="Logo" class="logo">
 
+    <div class="hiring-title">We're Hiring</div>
+
+
     <a href="mailto:gregwest1123@gmail.com" class="email-button">Email us</a>
 
     <main>
         <div class="button-container">
-            <a href="https://amzn.to/48Ef5i4" class="button">Occidental Leather 8-Inch Deep Bag: $194.85</a>
-            
+            <a href="https://amzn.to/48Ef5i4" class="button">Occidental Leather 8-Inch Deep Bag: 
+            <img src="ToolBag.jpg" alt="Leather Bag">
+            $194.85
+            </a>
         </div>
         <div class="button-container">
-            <a href="https://amzn.to/3vIvfrM" class="button">Occidental Leather Framer Set</a>
+            <a href="https://amzn.to/3vIvfrM" class="button">Occidental Leather Framer Set 
+            <img src="framerset.jpg" alt="Leather Framer Set">
+            $511.48
+            </a>
         </div>
         <div class="button-container">
-            <a href="https://amzn.to/4aZ7NqI" class="button">4050 Construction Master 5 Calculator</a>
+            <a href="https://amzn.to/4aZ7NqI" class="button">4050 Construction Master 5 Calculator: 
+            <img src="calculator.jpg" alt="Calculator">
+            $89.98
+            </a>
         </div>
         <!-- Add more buttons as needed -->
     </main>
 
     <footer>
-        <p>Disclaimer: The links below are affiliate links.</p>
+        <p>Disclaimer: Some of these links are affiliate links, by purchasing a product from an affiliate link, I may be elligble to recieve a commission</p>
     </footer>
 </body>
 
