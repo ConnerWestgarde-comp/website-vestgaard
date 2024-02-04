@@ -91,13 +91,21 @@
         main {
             display: flex;
             align-items: center;
-            justify-content: center;
+            justify-content: space-around;
             height: 60vh;
-            flex-direction: column;
+            flex-direction:column;
+            flex-wrap: wrap;
+        
         }
 
         .button-container {
             margin: 10px;
+            width: 15;
+            display: flex;
+            flex-direction: column;
+            
+                
+
         }
 
         .button {
@@ -114,7 +122,12 @@
             outline: 2px solid transparent; /* Outline for the link buttons (initially transparent) */
             transition: background-color 0.3s ease, outline 0.3s ease; /* Smooth transitions */
             font-size: 14px; /* Decrease font size for more text */
+            margin: 10px 0;
+            
         }
+        .button:first-child {
+        margin-bottom: auto; /* Push the first button to the top of the container */
+}
 
         .button:hover {
             background-color: #0056b3; /* Lighter blue on hover */
@@ -131,7 +144,7 @@
             color: #fff;
             text-align: center;
             padding: 10px;
-            position: relative; /* Change to relative positioning */
+            position: flex; /* Change to relative positioning */
             bottom: 0;
             width: 100%;
         }
@@ -156,32 +169,54 @@
     <div class="hiring-title">We're Hiring</div>
 
 
-    <a href="mailto:gregwest1123@gmail.com" class="email-button">Email us</a>
+    <a href="mailto:Admin@vestgaard.ca" class="email-button">Email us</a>
 
     <main>
 	 <div class="button-container">
-            <a href="https://amzn.to/47RDXl1" class="button">DeWalt 30' Measuring Tape 
+        <h2>Canadian</h2>   
+        <a href="https://amzn.to/47RDXl1" class="button">DeWalt 30' Measuring Tape 
             <img src="Dewalt.jpg" alt="Dewalt">
             $39.98
             </a>
-        </div>
-	<div class="button-container">
+        
+	
             <a href="https://amzn.to/3vIvfrM" class="button">Occidental Leather Framer Set 
             <img src="framerset.jpg" alt="Leather Framer Set">
             $511.48
             </a>
-       </div>
-        <div class="button-container">
+    
+       
             <a href="https://amzn.to/48Ef5i4" class="button">Occidental Leather 8-Inch Deep Bag: 
             <img src="ToolBag.jpg" alt="Leather Bag">
             $194.85
             </a>
-        </div>
-		<div class="button-container">
+        
+		
             <a href="https://amzn.to/4aZ7NqI" class="button">4050 Construction Master 5 Calculator: 
             <img src="calculator.jpg" alt="Calculator">
             $89.98
             </a>
+
+            <a href="https://amzn.to/480tQud" class="button">Blueprint Shield/Plans Carrier:
+            <img src="blueprint.jpg" alt="shield">
+                $73.11
+                </a>
+
+        </div>
+        <div class="button-container">
+            <h2>American</h2> 
+            <a href="https://amzn.to/3SIcuho" class="button">BluePrint Cover Protector:
+                <img src="blueprint.jpg" alt="Holder">
+                $29.94
+                </a>
+
+           
+           
+          
+           
+        
+	
+            
         </div>
        
        
