@@ -108,9 +108,9 @@
 
         }
 
-        .button {
-            width: 250px;
-            height: 100px;
+         .button {
+            
+            
             background-color: #007bff;
             color: #fff;
             text-align: center;
@@ -122,8 +122,13 @@
             outline: 2px solid transparent; /* Outline for the link buttons (initially transparent) */
             transition: background-color 0.3s ease, outline 0.3s ease; /* Smooth transitions */
             font-size: 14px; /* Decrease font size for more text */
-            margin: 10px 0;
             justify-content: start;
+            width: 90%; /* Adjust the width to fit the screen */
+            height: auto;
+            width: auto; /* Allow the height to adjust based on content */
+            max-width: 250px; 
+            max-height: 200px;/* Limit maximum width */
+            margin: 10px auto; /* Center align and add margin between buttons */
             
         }
         .button:first-child {
