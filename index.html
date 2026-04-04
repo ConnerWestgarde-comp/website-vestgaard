@@ -1,243 +1,1150 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vestgaard Construction</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@700;800;900&display=swap" rel="stylesheet">
     <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --charcoal: #141414;
+            --steel: #262626;
+            --concrete: #323232;
+            --amber: #d4912a;
+            --amber-light: #e8a840;
+            --amber-dark: #b8780e;
+            --light: #f0ece4;
+            --white: #ffffff;
+            --text-muted: #888;
+            --text-secondary: #b8b4ac;
+        }
+
+        html { scroll-behavior: smooth; }
+
         body {
-            margin: 0;
-            padding: 0;
-            font-family: Arial, sans-serif;
-            background: linear-gradient(to bottom, #6fa9f5, #0077cc); /* Light blue to dark blue gradient */
-            color: #fff; /* White text */
+            font-family: 'Inter', sans-serif;
+            background-color: var(--charcoal);
+            color: var(--light);
+            overflow-x: hidden;
         }
 
-        header {
-           
-            color: #fff;
-            text-align: center;
-            padding: 20px;
-            margin-bottom: 20px; /* Increase space between title and buttons */
+        /* ─── NAV ─── */
+        .nav {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%;
+            z-index: 1000;
+            padding: 1.4rem 3rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: background 0.5s, box-shadow 0.5s, padding 0.4s;
+        }
+        .nav.scrolled {
+            background: rgba(20, 20, 20, 0.96);
+            backdrop-filter: blur(16px);
+            box-shadow: 0 1px 0 rgba(255,255,255,0.06), 0 4px 40px rgba(0,0,0,0.5);
+            padding: 1rem 3rem;
+        }
+        .nav-brand {
+            font-weight: 800;
+            font-size: 1.05rem;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: var(--white);
+            text-decoration: none;
+        }
+        .nav-brand em { color: var(--amber); font-style: normal; }
+        .nav-links { display: flex; gap: 2.5rem; list-style: none; align-items: center; }
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.82rem;
+            font-weight: 500;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            transition: color 0.3s;
+        }
+        .nav-links a:hover { color: var(--amber); }
+        .nav-cta {
+            background: var(--amber) !important;
+            color: var(--charcoal) !important;
+            padding: 0.65rem 1.5rem !important;
+            border-radius: 3px;
+            font-weight: 700 !important;
+        }
+        .nav-cta:hover { background: var(--amber-light) !important; transform: translateY(-1px); }
+        .nav-toggle {
+            display: none; flex-direction: column; gap: 5px;
+            cursor: pointer; background: none; border: none; padding: 4px;
+        }
+        .nav-toggle span { width: 24px; height: 2px; background: var(--white); transition: 0.3s; }
+
+        /* ─── HERO ─── */
+        .hero {
             position: relative;
-        }
-
-        h1 {
-            margin: 0; /* Remove default margin for h1 */
-        }
-
-        .social-icons {
+            height: 100vh;
+            min-height: 700px;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-bottom: 20px; /* Increase space between social icons and the email button */
+            overflow: hidden;
         }
-
-        .social-icons a {
-            margin: 0 10px; /* Adjust the spacing between social icons */
-            text-decoration: none;
+        #hero-bg {
+            position: absolute;
+            inset: -15% 0;       /* extra room for parallax travel */
+            z-index: 0;
+            will-change: transform;
         }
-
-        .social-icons img {
-            width: 30px; /* Adjust the width of social icons */
-            border-radius: 50%; /* Make the images circular */
-            transition: transform 0.3s ease; /* Smooth transitions on hover */
-        }
-
-        .social-icons img:hover {
-            transform: scale(1.2); /* Enlarge the image on hover */
-        }
-
-        .logo-container {
-            background: linear-gradient(to bottom, #6fa9f5, #0077cc); /* Match the website background */
-            padding: 20px; /* Adjust the padding as needed */
-            text-align: center;
-        }
-
-        .logo {
-            max-width: 100px; /* Adjust the maximum width of the logo */
+        #hero-bg img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
             display: block;
-            margin: 0 auto; /* Center the logo within the container */
+            transform-origin: center center;
+            animation: heroZoom 18s ease-out forwards;
         }
-
-        .email-button {
-            width: 200px;
-            height: 50px;
-            background-color: #ff9900; /* Different color for the email button */
-            color: #fff;
+        @keyframes heroZoom {
+            from { transform: scale(1.12); }
+            to   { transform: scale(1.04); }
+        }
+        .hero-overlay {
+            position: absolute; inset: 0; z-index: 1;
+            background: linear-gradient(
+                170deg,
+                rgba(20,20,20,0.25) 0%,
+                rgba(20,20,20,0.5)  45%,
+                rgba(20,20,20,0.92) 100%
+            );
+        }
+        /* amber horizontal bar at very bottom */
+        .hero-overlay::after {
+            content: '';
+            position: absolute;
+            bottom: 0; left: 0;
+            width: 100%; height: 4px;
+            background: var(--amber);
+        }
+        .hero-content {
+            position: relative; z-index: 2;
             text-align: center;
-            line-height: 50px;
+            padding: 0 2rem;
+            max-width: 950px;
+        }
+        .hero-eyebrow {
+            display: inline-flex; align-items: center; gap: 0.75rem;
+            font-size: 0.72rem; font-weight: 600;
+            letter-spacing: 0.35em; text-transform: uppercase; color: var(--amber);
+            margin-bottom: 1.75rem;
+            opacity: 0; transform: translateY(24px);
+            animation: fadeUp 0.9s ease forwards 0.5s;
+        }
+        .hero-eyebrow::before, .hero-eyebrow::after {
+            content: ''; flex: 1; width: 40px; height: 1px; background: var(--amber); opacity: 0.5;
+        }
+        .hero-title {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(3.5rem, 8vw, 7rem);
+            font-weight: 900;
+            line-height: 1;
+            color: var(--white);
+            margin-bottom: 1.75rem;
+            letter-spacing: -0.01em;
+        }
+        .hero-title .line { display: block; overflow: hidden; }
+        .hero-title .line-inner {
             display: block;
-            text-decoration: none;
-            border: 2px solid #ff9900; /* Border for the email button */
-            border-radius: 10px; /* Rounded corners */
-            margin: 30px auto; /* Increase space between logo and email button */
-            transition: background-color 0.3s ease, outline 0.3s ease; /* Smooth transitions */
+            opacity: 0; transform: translateY(110%);
+            animation: slideUp 1.1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        .hero-title .line:nth-child(1) .line-inner { animation-delay: 0.15s; }
+        .hero-title .line:nth-child(2) .line-inner { animation-delay: 0.35s; }
+        .hero-title .gold { color: var(--amber); }
+
+        @keyframes slideUp {
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeUp {
+            to { opacity: 1; transform: translateY(0); }
         }
 
-        .email-button:hover {
-            background-color: #cc7a00; /* Darker color on hover */
-            outline: 2px solid #cc7a00; /* Outline color on hover */
+        .hero-sub {
+            font-size: 1.1rem; font-weight: 300;
+            color: var(--text-secondary);
+            max-width: 520px; margin: 0 auto 2.75rem;
+            line-height: 1.8;
+            opacity: 0; transform: translateY(24px);
+            animation: fadeUp 0.9s ease forwards 0.75s;
+        }
+        .hero-actions {
+            display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;
+            opacity: 0; transform: translateY(24px);
+            animation: fadeUp 0.9s ease forwards 0.95s;
+        }
+        .btn {
+            display: inline-flex; align-items: center; gap: 0.5rem;
+            padding: 1rem 2.2rem;
+            font-family: 'Inter', sans-serif; font-size: 0.82rem;
+            font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+            text-decoration: none; border: none; border-radius: 3px;
+            cursor: pointer; transition: all 0.3s ease;
+        }
+        .btn-primary { background: var(--amber); color: var(--charcoal); }
+        .btn-primary:hover { background: var(--amber-light); transform: translateY(-2px); box-shadow: 0 10px 35px rgba(212,145,42,0.35); }
+        .btn-ghost {
+            background: transparent; color: var(--white);
+            border: 1.5px solid rgba(255,255,255,0.25);
+        }
+        .btn-ghost:hover { border-color: var(--amber); color: var(--amber); transform: translateY(-2px); }
+
+        .hero-scroll-hint {
+            position: absolute; bottom: 2.5rem; left: 50%;
+            transform: translateX(-50%);
+            z-index: 2; display: flex; flex-direction: column; align-items: center; gap: 0.6rem;
+            opacity: 0; animation: fadeUp 0.8s ease forwards 1.4s;
+        }
+        .hero-scroll-hint span {
+            font-size: 0.65rem; letter-spacing: 0.25em;
+            text-transform: uppercase; color: var(--text-muted);
+        }
+        .scroll-bar {
+            width: 1px; height: 52px;
+            background: linear-gradient(to bottom, var(--amber), transparent);
+            animation: barPulse 2.2s ease-in-out infinite;
+        }
+        @keyframes barPulse {
+            0%,100% { opacity: 0.3; transform: scaleY(0.8); }
+            50%      { opacity: 1; transform: scaleY(1); }
         }
 
-        .hiring-title {
-            font-size: 24px; /* Adjust font size */
-            margin-bottom: 10px; /* Add space between the hiring title and the email button */
-            color: rgb(255, 255, 255); /* Different color for the hiring title */
-            text-align: center; /* Center the hiring title */
-        }
-
-        main {
-            display: flex;
-            align-items:stretch;
-            justify-content: center;
-            
-            
-           
-        
-        }
-
-        .button-container {
-            margin: 10px;
-            width: 15;
+        /* Hiring CTA — bottom right of hero */
+        .hero-hiring {
+            position: absolute;
+            bottom: 2.5rem;
+            right: 3rem;
+            z-index: 2;
             display: flex;
             flex-direction: column;
-            align-items: flex-start; 
-                
-
+            align-items: flex-end;
+            gap: 0.65rem;
+            text-align: right;
+            opacity: 0;
+            transform:translateY(24px);
+            animation: fadeUp 0.85s ease forwards 1.15s;
+        }
+        .hero-hiring-kicker {
+            font-size: 0.65rem;
+            font-weight: 700;
+            letter-spacing: 0.28em;
+            text-transform: uppercase;
+            color: var(--amber);
+        }
+        .hero-hiring .btn {
+            padding: 0.95rem 1.85rem;
+            font-size: 0.78rem;
+            white-space: nowrap;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.35);
         }
 
-         .button {
-            
-            
-            background-color: #007bff;
-            color: #fff;
-            text-align: center;
-            line-height: 50px;
-            display: block;
-            text-decoration: none;
-            border: 2px solid #007bff; /* Border for the link buttons */
-            border-radius: 10px; /* Rounded corners */
-            outline: 2px solid transparent; /* Outline for the link buttons (initially transparent) */
-            transition: background-color 0.3s ease, outline 0.3s ease; /* Smooth transitions */
-            font-size: 14px; /* Decrease font size for more text */
-            justify-content: start;
-            width: 90%; /* Adjust the width to fit the screen */
-            height: auto;
-            width: auto; /* Allow the height to adjust based on content */
-            max-width: 250px; 
-            max-height: 200px;/* Limit maximum width */
-            margin: 10px auto; /* Center align and add margin between buttons */
-            
+        /* ─── SHARED SECTION ─── */
+        section { padding: 8rem 3rem; }
+        .section-header { text-align: center; margin-bottom: 4.5rem; }
+        .section-tag {
+            font-size: 0.72rem; font-weight: 700;
+            letter-spacing: 0.35em; text-transform: uppercase;
+            color: var(--amber); display: block; margin-bottom: 1rem;
         }
-        .button:first-child {
-        margin-bottom: auto; /* Push the first button to the top of the container */
-}
+        .section-title {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(2rem, 4vw, 3.2rem);
+            font-weight: 800; color: var(--white); line-height: 1.1;
+        }
+        .section-rule {
+            width: 50px; height: 3px;
+            background: var(--amber);
+            margin: 1.5rem auto 0; border: none;
+        }
+        .max-w { max-width: 1120px; margin: 0 auto; }
 
-        .button:hover {
-            background-color: #0056b3; /* Lighter blue on hover */
-            outline: 2px solid #0056b3; /* Outline color on hover */
-        }
-        .button img {
-            max-width: 50px; /* Set the maximum width of the image */
-            margin-right: 100px; /* Add right margin to separate the image and button text */
-            max-height: 50px;
+        /* ─── REVEAL ANIMATIONS ─── */
+        .reveal        { opacity: 0; transform: translateY(50px); transition: opacity 0.9s ease, transform 0.9s ease; }
+        .reveal-left   { opacity: 0; transform: translateX(-60px); transition: opacity 0.9s ease, transform 0.9s ease; }
+        .reveal-right  { opacity: 0; transform: translateX(60px); transition: opacity 0.9s ease, transform 0.9s ease; }
+        .reveal-scale  { opacity: 0; transform: scale(0.88); transition: opacity 0.8s ease, transform 0.8s ease; }
+
+        .reveal.vis, .reveal-left.vis, .reveal-right.vis, .reveal-scale.vis {
+            opacity: 1; transform: none;
         }
 
-           footer {
-            
-            color: #fff;
-            text-align: center;
-            padding: 10px;
-            position: flex; /* Change to relative positioning */
-            bottom: 0;
+        /* stagger via delay set inline */
+
+        /* ─── SERVICES ─── */
+        #services { background: var(--charcoal); }
+        .services-grid {
+            display: grid; grid-template-columns: repeat(3,1fr);
+            gap: 1.75rem;
+        }
+        .service-card {
+            background: var(--steel);
+            padding: 2.5rem 2rem;
+            border-radius: 6px;
+            border-top: 3px solid transparent;
+            position: relative; overflow: hidden;
+            transition: border-color 0.4s, transform 0.4s, box-shadow 0.4s;
+        }
+        .service-card::after {
+            content: '';
+            position: absolute; inset: 0;
+            background: linear-gradient(135deg, rgba(212,145,42,0.06), transparent);
+            opacity: 0; transition: opacity 0.4s;
+        }
+        .service-card:hover {
+            border-top-color: var(--amber);
+            transform: translateY(-5px);
+            box-shadow: 0 24px 60px rgba(0,0,0,0.4);
+        }
+        .service-card:hover::after { opacity: 1; }
+        .service-icon {
+            width: 44px; height: 44px;
+            background: rgba(212,145,42,0.12);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            margin-bottom: 1.4rem;
+        }
+        .service-icon svg { width: 22px; height: 22px; fill: var(--amber); }
+        .service-card h3 {
+            font-size: 1.1rem; font-weight: 700;
+            color: var(--white); margin-bottom: 0.75rem;
+        }
+        .service-card p {
+            font-size: 0.88rem; line-height: 1.75;
+            color: var(--text-muted);
+        }
+
+        /* ─── TEAM ─── */
+        #team { background: var(--steel); }
+        .team-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .team-card { text-align: center; }
+        .team-avatar {
+            width: 130px; height: 130px;
+            border-radius: 50%;
+            margin: 0 auto 1.25rem;
+            background: var(--concrete);
+            display: flex; align-items: center; justify-content: center;
+            font-family: 'Playfair Display', serif;
+            font-size: 2.2rem; font-weight: 800;
+            color: var(--amber);
+            border: 3px solid var(--concrete);
+            transition: border-color 0.4s, transform 0.4s;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+        .team-avatar img {
             width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center top;
+            display: block;
+        }
+        /* Tune crop if a source photo is framed differently than the others */
+        .team-avatar--isaiah img {
+            object-position: center center;
+        }
+        .team-card:hover .team-avatar {
+            border-color: var(--amber); transform: scale(1.04);
+        }
+        .team-card h3 { font-size: 1rem; font-weight: 700; color: var(--white); margin-bottom: 0.3rem; }
+        .team-card .role {
+            font-size: 0.75rem; font-weight: 600;
+            color: var(--amber); text-transform: uppercase;
+            letter-spacing: 0.1em; margin-bottom: 0.75rem;
+        }
+        .team-card p { font-size: 0.83rem; color: var(--text-muted); line-height: 1.65; }
+
+        /* ─── FOLLOW THE BUILD ─── */
+        .follow-section {
+            background: var(--charcoal);
+            padding: 0;
+            overflow: hidden;
+        }
+
+        /* Top: full-bleed dark banner with amber accent */
+        .follow-hero {
+            position: relative;
+            padding: 7rem 3rem 5rem;
+            text-align: center;
+            background: linear-gradient(180deg, #0e0e0e 0%, var(--charcoal) 100%);
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+        .follow-hero::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 50%; transform: translateX(-50%);
+            width: 1px; height: 60px;
+            background: linear-gradient(to bottom, var(--amber), transparent);
+        }
+
+        .follow-kicker {
+            font-size: 0.72rem; font-weight: 700;
+            letter-spacing: 0.35em; text-transform: uppercase;
+            color: var(--amber); display: block; margin-bottom: 1.5rem;
+        }
+        .follow-headline {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(3rem, 7vw, 5.5rem);
+            font-weight: 900;
+            color: var(--white);
+            line-height: 1;
+            margin-bottom: 1.5rem;
+            letter-spacing: -0.01em;
+        }
+        .follow-headline em {
+            font-style: normal;
+            color: var(--amber);
+        }
+        .follow-sub {
+            font-size: 1.1rem; font-weight: 300;
+            color: var(--text-secondary);
+            max-width: 560px; margin: 0 auto 3.5rem;
+            line-height: 1.8;
+        }
+
+        /* Platform cards */
+        .follow-platforms {
+            display: grid;
+            grid-template-columns: repeat(4,1fr);
+            gap: 0;
+            border-top: 1px solid rgba(255,255,255,0.06);
+        }
+        .platform-card {
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            padding: 4rem 2.5rem;
+            text-decoration: none;
+            position: relative; overflow: hidden;
+            border-right: 1px solid rgba(255,255,255,0.06);
+            transition: background 0.45s;
+            background: var(--charcoal);
+            gap: 1.25rem;
+        }
+        .platform-card:last-child { border-right: none; }
+        .platform-card::before {
+            content: '';
+            position: absolute; inset: 0;
+            opacity: 0;
+            transition: opacity 0.45s;
+        }
+        .platform-card.tiktok::before  { background: linear-gradient(135deg, rgba(105,201,208,0.08), rgba(254,44,85,0.08)); }
+        .platform-card.youtube::before { background: linear-gradient(135deg, rgba(255,0,0,0.1), transparent); }
+        .platform-card.twitter::before { background: linear-gradient(135deg, rgba(29,161,242,0.1), transparent); }
+        .platform-card.instagram::before { background: linear-gradient(135deg, rgba(193,53,132,0.1), rgba(253,181,19,0.06)); }
+        .platform-card:hover { background: var(--steel); }
+        .platform-card:hover::before { opacity: 1; }
+
+        .platform-icon {
+            width: 64px; height: 64px;
+            border-radius: 18px;
+            display: flex; align-items: center; justify-content: center;
+            transition: transform 0.4s;
+        }
+        .platform-card:hover .platform-icon { transform: scale(1.12) translateY(-3px); }
+        .platform-card.tiktok   .platform-icon { background: #000; }
+        .platform-card.youtube  .platform-icon { background: #ff0000; }
+        .platform-card.twitter  .platform-icon { background: #000; }
+        .platform-card.instagram .platform-icon {
+            background: linear-gradient(135deg, #f58529, #dd2a7b, #8134af, #515bd4);
+        }
+        .platform-icon svg { width: 32px; height: 32px; fill: #fff; }
+
+        .platform-name {
+            font-size: 1rem; font-weight: 700;
+            color: var(--white); letter-spacing: 0.04em;
+        }
+        .platform-handle {
+            font-size: 0.8rem; color: var(--text-muted);
+            letter-spacing: 0.05em;
+        }
+        .platform-arrow {
+            position: absolute; bottom: 1.5rem; right: 1.75rem;
+            font-size: 0.75rem; font-weight: 600;
+            letter-spacing: 0.1em; text-transform: uppercase;
+            color: var(--amber);
+            opacity: 0; transform: translateX(-6px);
+            transition: opacity 0.35s, transform 0.35s;
+        }
+        .platform-card:hover .platform-arrow { opacity: 1; transform: translateX(0); }
+
+        /* ─── CONTACT ─── */
+        #contact {
+            background: var(--steel);
+        }
+        .contact-layout {
+            max-width: 1120px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1.5fr;
+            gap: 5rem;
+            align-items: start;
+        }
+        .contact-info h3 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.75rem; font-weight: 800;
+            color: var(--white); margin-bottom: 1rem; line-height: 1.25;
+        }
+        .contact-info p {
+            font-size: 0.95rem; color: var(--text-secondary);
+            line-height: 1.85; margin-bottom: 2rem;
+        }
+        .contact-email {
+            font-size: 0.9rem; font-weight: 600;
+            color: var(--amber); text-decoration: none;
+            display: inline-flex; align-items: center; gap: 0.5rem;
+            letter-spacing: 0.03em;
+            transition: color 0.3s;
+        }
+        .contact-email:hover { color: var(--amber-light); }
+        .contact-detail {
+            display: flex; flex-direction: column; gap: 1rem;
+            margin-top: 2.5rem;
+            padding-top: 2.5rem;
+            border-top: 1px solid rgba(255,255,255,0.07);
+        }
+        .contact-detail-row {
+            display: flex; align-items: center; gap: 0.75rem;
+        }
+        .contact-detail-row svg {
+            width: 18px; height: 18px; fill: none;
+            stroke: var(--amber); stroke-width: 1.75;
+            stroke-linecap: round; stroke-linejoin: round;
+            flex-shrink: 0;
+        }
+        .contact-detail-row span {
+            font-size: 0.88rem; color: var(--text-secondary);
+        }
+
+        /* ─── FORM ─── */
+        .contact-form-wrap {
+            background: var(--concrete);
+            border-radius: 8px;
+            padding: 2.75rem;
+            border: 1px solid rgba(255,255,255,0.06);
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.25rem;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-bottom: 1.25rem;
+        }
+        .form-group.full { grid-column: 1 / -1; }
+        .form-group label {
+            font-size: 0.75rem; font-weight: 600;
+            letter-spacing: 0.1em; text-transform: uppercase;
+            color: var(--text-muted);
+        }
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            background: var(--steel);
+            border: 1.5px solid rgba(255,255,255,0.08);
+            border-radius: 5px;
+            padding: 0.85rem 1rem;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+            color: var(--white);
+            outline: none;
+            transition: border-color 0.3s, box-shadow 0.3s;
+            width: 100%;
+            appearance: none;
+            -webkit-appearance: none;
+        }
+        .form-group select {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23888' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+            padding-right: 2.5rem;
+        }
+        .form-group select option { background: var(--steel); }
+        .form-group textarea { resize: vertical; min-height: 140px; line-height: 1.6; }
+        .form-group input::placeholder,
+        .form-group textarea::placeholder { color: var(--text-muted); opacity: 0.7; }
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            border-color: var(--amber);
+            box-shadow: 0 0 0 3px rgba(212,145,42,0.12);
+        }
+        .form-group input.err,
+        .form-group select.err,
+        .form-group textarea.err {
+            border-color: #e05555;
+        }
+        .form-error {
+            font-size: 0.75rem; color: #e05555;
+            margin-top: 0.25rem; display: none;
+        }
+        .form-error.show { display: block; }
+        .form-submit {
+            width: 100%; padding: 1rem;
+            background: var(--amber);
+            color: var(--charcoal);
+            font-family: 'Inter', sans-serif;
+            font-size: 0.85rem; font-weight: 700;
+            letter-spacing: 0.1em; text-transform: uppercase;
+            border: none; border-radius: 4px; cursor: pointer;
+            transition: background 0.3s, transform 0.3s, box-shadow 0.3s;
+            display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+        }
+        .form-submit:hover {
+            background: var(--amber-light);
+            transform: translateY(-1px);
+            box-shadow: 0 8px 28px rgba(212,145,42,0.3);
+        }
+        .form-submit:disabled {
+            opacity: 0.6; cursor: not-allowed; transform: none;
+        }
+        .form-submit svg {
+            width: 18px; height: 18px; fill: none;
+            stroke: currentColor; stroke-width: 2;
+            stroke-linecap: round; stroke-linejoin: round;
+        }
+
+        /* success state */
+        .form-success {
+            display: none;
+            text-align: center;
+            padding: 3rem 2rem;
+        }
+        .form-success.show { display: block; }
+        .success-icon {
+            width: 64px; height: 64px;
+            border-radius: 50%;
+            background: rgba(212,145,42,0.12);
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 1.5rem;
+        }
+        .success-icon svg {
+            width: 30px; height: 30px; fill: none;
+            stroke: var(--amber); stroke-width: 2.5;
+            stroke-linecap: round; stroke-linejoin: round;
+        }
+        .form-success h4 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem; font-weight: 800;
+            color: var(--white); margin-bottom: 0.75rem;
+        }
+        .form-success p {
+            font-size: 0.9rem; color: var(--text-secondary); line-height: 1.7;
+        }
+
+        @media (max-width: 900px) {
+            .contact-layout { grid-template-columns: 1fr; gap: 3rem; }
+        }
+        @media (max-width: 600px) {
+            .form-row { grid-template-columns: 1fr; }
+            .contact-form-wrap { padding: 1.75rem; }
+        }
+
+        /* ─── FOOTER ─── */
+        footer {
+            background: #0e0e0e;
+            border-top: 1px solid rgba(255,255,255,0.05);
+            padding: 2.5rem 3rem;
+            display: flex; justify-content: space-between;
+            align-items: center; flex-wrap: wrap; gap: 1rem;
+        }
+        footer p { font-size: 0.78rem; color: var(--text-muted); }
+        .footer-links { display: flex; gap: 1.5rem; }
+        .footer-links a {
+            font-size: 0.78rem; color: var(--text-muted);
+            text-decoration: none; transition: color 0.3s;
+        }
+        .footer-links a:hover { color: var(--amber); }
+
+        /* ─── RESPONSIVE ─── */
+        @media (max-width: 1024px) {
+            .services-grid { grid-template-columns: repeat(2,1fr); }
+            .team-grid { grid-template-columns: repeat(2, 1fr); gap: 2.5rem; max-width: 640px; }
+            .follow-platforms { grid-template-columns: repeat(2,1fr); }
+            .platform-card:nth-child(2) { border-right: none; }
+            .platform-card:nth-child(3) { border-top: 1px solid rgba(255,255,255,0.06); border-right: 1px solid rgba(255,255,255,0.06); }
+            .platform-card:nth-child(4) { border-top: 1px solid rgba(255,255,255,0.06); border-right: none; }
+        }
+        @media (max-width: 768px) {
+            .nav { padding: 1rem 1.5rem; }
+            .nav-links {
+                display: none; position: absolute; top: 100%; left: 0;
+                width: 100%; background: rgba(14,14,14,0.98);
+                flex-direction: column; padding: 2rem; gap: 1.5rem;
+            }
+            .nav-links.open { display: flex; }
+            .nav-toggle { display: flex; }
+            section { padding: 5rem 1.5rem; }
+            .services-grid { grid-template-columns: 1fr; }
+            .team-grid { grid-template-columns: 1fr; max-width: 420px; margin-left: auto; margin-right: auto; }
+            .follow-platforms { grid-template-columns: 1fr 1fr; }
+            .platform-card { padding: 2.5rem 1.5rem; }
+            .hero-actions { flex-direction: column; align-items: center; }
+            .hero-hiring {
+                right: auto;
+                left: 50%;
+                bottom: 6.25rem;
+                align-items: center;
+                text-align: center;
+                animation: fadeUpHiringMobile 0.85s ease forwards 1.15s;
+            }
+            @keyframes fadeUpHiringMobile {
+                from { opacity: 0; transform: translateX(-50%) translateY(24px); }
+                to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+            }
+            footer { flex-direction: column; text-align: center; }
         }
     </style>
-	
 </head>
-
 <body>
-    <header>
-        <h1>Vestgaard Construction</h1>
-        <div class="social-icons">
-            <a href="https://www.tiktok.com/@vestgaardconstruction" target="_blank"><img src="tiktokicon.png" alt="tiktok"></a>
-            <a href="https://www.youtube.com/channel/UCnDDDNAO48EFtACnDyd4-aA" target="_blank"><img src="youtube.png" alt="youtube"></a>
-            <a href="https://twitter.com/vestgaardltd" target="_blank"><img src="twitter.png" alt="twitter"></a>
-	    <a href="https://www.instagram.com/vestgaardconstruction/" target="_blank"><img src="instagram.png" alt="instagram"></a>
-            <!-- Replace the above paths with the actual paths to your social media icons -->
+
+    <!-- NAV -->
+    <nav class="nav" id="nav">
+        <a href="#" class="nav-brand">Vestgaard<em>.</em></a>
+        <ul class="nav-links" id="navLinks">
+            <li><a href="#follow-build">Follow</a></li>
+            <li><a href="#services">Services</a></li>
+            <li><a href="#team">Team</a></li>
+            <li><a href="#contact">Contact</a></li>
+            <li><a href="#contact-form" class="nav-cta">Get a Quote</a></li>
+        </ul>
+        <button class="nav-toggle" id="navToggle" aria-label="Menu">
+            <span></span><span></span><span></span>
+        </button>
+    </nav>
+
+    <!-- HERO -->
+    <section class="hero" id="hero">
+        <div id="hero-bg">
+            <img src="landing.png" alt="Vestgaard Construction crew on site" id="heroImg">
+        </div>
+        <div class="hero-overlay"></div>
+        <div class="hero-content">
+            <span class="hero-eyebrow">Structural Framing &nbsp;&bull;&nbsp; Home Building &nbsp;&bull;&nbsp; General Construction</span>
+            <h1 class="hero-title">
+                <span class="line"><span class="line-inner">Vestgaard</span></span>
+                <span class="line"><span class="line-inner"><span class="gold">Construction</span></span></span>
+            </h1>
+            <p class="hero-sub">Built by tradespeople who care. Precision framing and full residential builds across Western Canada.</p>
+            <div class="hero-actions">
+                <a href="#contact-form" class="btn btn-primary" id="heroFormBtn">Start Your Project</a>
+                <a href="#services" class="btn btn-ghost">Our Services</a>
             </div>
-    </header>
+        </div>
+        <div class="hero-hiring">
+            <span class="hero-hiring-kicker">We're hiring</span>
+            <a href="mailto:Admin@vestgaard.ca?subject=Join%20the%20Team%20%E2%80%94%20Careers%20Inquiry&amp;body=Hi%20Vestgaard%20Construction%2C%0A%0AI%E2%80%99m%20interested%20in%20joining%20the%20team.%20Here%E2%80%99s%20a%20bit%20about%20my%20experience%20and%20the%20role%20I%E2%80%99m%20looking%20for%3A%0A%0A" class="btn btn-primary">Join the team</a>
+        </div>
+        <div class="hero-scroll-hint">
+            <span>Scroll</span>
+            <div class="scroll-bar"></div>
+        </div>
+    </section>
 
-    <img src="logo.png" alt="Logo" class="logo">
+    <!-- FOLLOW THE BUILD (second section — hero is first) -->
+    <div class="follow-section" id="follow-build">
+        <div class="follow-hero">
+            <span class="follow-kicker reveal">Behind the Build</span>
+            <h2 class="follow-headline reveal" style="transition-delay:0.1s">
+                Follow<br><em>The Build.</em>
+            </h2>
+            <p class="follow-sub reveal" style="transition-delay:0.2s">
+                We take you on the job site every single day. Raw footage, framing tips, project walkthroughs — see construction the way it actually happens.
+            </p>
+            <a href="https://www.tiktok.com/@vestgaardconstruction" target="_blank" rel="noopener" class="btn btn-primary reveal" style="transition-delay:0.3s">Watch the Latest ↗</a>
+        </div>
 
-    <div class="hiring-title">We're Hiring</div>
+        <div class="follow-platforms">
 
-
-    <a href="mailto:Admin@vestgaard.ca" class="email-button">Email us</a>
-
-    <main>
-	 <div class="button-container">
-        <h2>Canada</h2>   
-        <a href="https://amzn.to/47RDXl1" class="button">DeWalt 30' Measuring Tape 
-            <img src="Dewalt.jpg" alt="Dewalt">
-            $39.98 CAD
+            <a href="https://www.tiktok.com/@vestgaardconstruction" target="_blank" rel="noopener" class="platform-card tiktok reveal" style="transition-delay:0s">
+                <div class="platform-icon">
+                    <svg viewBox="0 0 24 24"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1v-3.5a6.37 6.37 0 00-.79-.05A6.34 6.34 0 003.15 15.2a6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.34-6.34V9.17a8.16 8.16 0 004.76 1.52v-3.4a4.85 4.85 0 01-1-.6z"/></svg>
+                </div>
+                <div class="platform-name">TikTok</div>
+                <div class="platform-handle">@vestgaardconstruction</div>
+                <span class="platform-arrow">Follow ↗</span>
             </a>
-        
-	
-            <a href="https://amzn.to/3vIvfrM" class="button">Occidental Leather Framer Set 
-            <img src="framerset.jpg" alt="Leather Framer Set">
-            $511.48 CAD
-            </a>
-    
-       
-            <a href="https://amzn.to/48Ef5i4" class="button">Occidental Leather 8-Inch Deep Bag: 
-            <img src="ToolBag.jpg" alt="Leather Bag">
-            $194.85 CAD
-            </a>
-        
-		
-            <a href="https://amzn.to/4aZ7NqI" class="button">4050 Construction Master 5 Calculator: 
-            <img src="calculator.jpg" alt="Calculator">
-            $89.98 CAD
+
+            <a href="https://www.youtube.com/channel/UCnDDDNAO48EFtACnDyd4-aA" target="_blank" rel="noopener" class="platform-card youtube reveal" style="transition-delay:0.1s">
+                <div class="platform-icon">
+                    <svg viewBox="0 0 24 24"><path d="M23.5 6.19a3.02 3.02 0 00-2.12-2.14C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.38.55A3.02 3.02 0 00.5 6.19 31.6 31.6 0 000 12a31.6 31.6 0 00.5 5.81 3.02 3.02 0 002.12 2.14c1.88.55 9.38.55 9.38.55s7.5 0 9.38-.55a3.02 3.02 0 002.12-2.14A31.6 31.6 0 0024 12a31.6 31.6 0 00-.5-5.81zM9.55 15.57V8.43L15.82 12l-6.27 3.57z"/></svg>
+                </div>
+                <div class="platform-name">YouTube</div>
+                <div class="platform-handle">Vestgaard Construction</div>
+                <span class="platform-arrow">Subscribe ↗</span>
             </a>
 
-            <a href="https://amzn.to/480tQud" class="button">BluePrint Cover Protector:
-            <img src="blueprint.jpg" alt="shield">
-                $73.11 CAD
-                </a>
+            <a href="https://twitter.com/vestgaardltd" target="_blank" rel="noopener" class="platform-card twitter reveal" style="transition-delay:0.2s">
+                <div class="platform-icon">
+                    <svg viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                </div>
+                <div class="platform-name">X / Twitter</div>
+                <div class="platform-handle">@vestgaardltd</div>
+                <span class="platform-arrow">Follow ↗</span>
+            </a>
+
+            <a href="https://www.instagram.com/vestgaardconstruction/" target="_blank" rel="noopener" class="platform-card instagram reveal" style="transition-delay:0.3s">
+                <div class="platform-icon">
+                    <svg viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+                </div>
+                <div class="platform-name">Instagram</div>
+                <div class="platform-handle">@vestgaardconstruction</div>
+                <span class="platform-arrow">Follow ↗</span>
+            </a>
 
         </div>
-        <div class="button-container">
-            <h2>USA</h2> 
-            <a href="https://amzn.to/3SIcuho" class="button">BluePrint Cover Protector:
-                <img src="blueprint.jpg" alt="Holder">
-                $29.94 USD
-                </a>
+    </div>
 
-           
-           <a href="https://amzn.to/4bsuBiz" class="button">Construction Master Pro Calculator
-            <img src="calculator2.jpg" alt="Holder">
-            $56.95 USD
-            </a>
-          
-           
-        
-	
-            
+    <!-- SERVICES -->
+    <section id="services">
+        <div class="max-w">
+            <div class="section-header reveal">
+                <span class="section-tag">What We Do</span>
+                <h2 class="section-title">Our Services</h2>
+                <hr class="section-rule">
+            </div>
+            <div class="services-grid">
+
+                <div class="service-card reveal-scale" style="transition-delay:0s">
+                    <div class="service-icon">
+                        <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22" fill="none" stroke="#d4912a" stroke-width="1.5"/></svg>
+                    </div>
+                    <h3>Structural Framing</h3>
+                    <p>Full structural framing for residential and commercial projects. Walls, floors, roofs — we build the skeleton that holds everything together.</p>
+                </div>
+
+                <div class="service-card reveal-scale" style="transition-delay:0.1s">
+                    <div class="service-icon">
+                        <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                    </div>
+                    <h3>Custom Home Building</h3>
+                    <p>From the ground up, we frame and build custom homes tailored to your vision, working closely with you and your design team.</p>
+                </div>
+
+                <div class="service-card reveal-scale" style="transition-delay:0.2s">
+                    <div class="service-icon">
+                        <svg viewBox="0 0 24 24"><path d="M1 22V9l11-7 11 7v13"/><path d="M9 22V12h6v10"/></svg>
+                    </div>
+                    <h3>Multi-Family &amp; Commercial</h3>
+                    <p>Large-scale multi-family and commercial framing delivered on time and on budget, with safety as our top priority.</p>
+                </div>
+
+                <div class="service-card reveal-scale" style="transition-delay:0.05s">
+                    <div class="service-icon">
+                        <svg viewBox="0 0 24 24"><polygon points="12 2 22 20 2 20"/></svg>
+                    </div>
+                    <h3>Roof Systems</h3>
+                    <p>Complex roof framing including trusses, rafters, and engineered systems. Precision cuts and layouts for every roof profile.</p>
+                </div>
+
+                <div class="service-card reveal-scale" style="transition-delay:0.15s">
+                    <div class="service-icon">
+                        <svg viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>
+                    </div>
+                    <h3>General Construction</h3>
+                    <p>Beyond framing — concrete, siding, exterior finishing. A full-service approach when your project needs more than just the frame.</p>
+                </div>
+
+                <div class="service-card reveal-scale" style="transition-delay:0.25s">
+                    <div class="service-icon">
+                        <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+                    </div>
+                    <h3>Project Consultation</h3>
+                    <p>Not sure where to start? We'll scope your build, estimate costs, and plan your timeline before a single nail is driven.</p>
+                </div>
+
+            </div>
         </div>
-       
-       
-        <!-- Add more buttons as needed -->
-    </main>
+    </section>
 
+    <!-- TEAM -->
+    <section id="team">
+        <div class="max-w">
+            <div class="section-header reveal">
+                <span class="section-tag">The Crew</span>
+                <h2 class="section-title">Meet the Team</h2>
+                <hr class="section-rule">
+            </div>
+            <div class="team-grid">
+                <div class="team-card reveal" style="transition-delay:0s">
+                    <div class="team-avatar">
+                        <img src="greg.png" alt="Portrait of Gregory Westgarde" width="130" height="130" loading="lazy" decoding="async">
+                    </div>
+                    <h3>Gregory Westgarde</h3>
+                    <div class="role">Owner</div>
+                    <p>Who is our owner? Please scroll through our social media and you'll get to know Greg. Greg employs all aspects of modern construction technology with his certificate in computer assisted drafting. Greg's most valuable asset is his higher education in finance and accounting; this has enabled him to build a company that not only does good work, but has enabled him to survive through the ups and downs of the market. Vestgaard Construction is built to last.</p>
+                </div>
+                <div class="team-card reveal" style="transition-delay:0.12s">
+                    <div class="team-avatar team-avatar--isaiah">
+                        <img src="isaiah.png" alt="Portrait of Isaiah Westgarde" width="130" height="130" loading="lazy" decoding="async">
+                    </div>
+                    <h3>Isaiah Westgarde</h3>
+                    <div class="role">Lead Construction Supervisor</div>
+                    <p>A decade of experience: Isaiah has an attention to detail and an ability to make the jobsite an enjoyable place for our employees to work.</p>
+                </div>
+
+                <div class="team-card reveal" style="transition-delay:0.24s">
+                    <div class="team-avatar">
+                        <img src="conner.webp" alt="Portrait of Conner Westgarde" width="130" height="130" loading="lazy" decoding="async">
+                    </div>
+                    <h3>Conner Westgarde</h3>
+                    <div class="role">Development &amp; Technology</div>
+                    <p>BS in Computer Science with an understanding of construction; he assists in development and implementation of new systems and tools for the company.</p>
+                </div>
+                <div class="team-card reveal" style="transition-delay:0.32s">
+                    <div class="team-avatar">
+                        <img src="anna.jpeg" alt="Portrait of Anna Buhanec" width="130" height="130" loading="lazy" decoding="async">
+                    </div>
+                    <h3>Anna Buhanec</h3>
+                    <div class="role">Office Manager</div>
+                    <p>Anna holds a masters degree in economics and business administration. She is integral to the overall functioning of the company</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CONTACT -->
+    <section id="contact">
+        <div class="section-header reveal">
+            <span class="section-tag">Get In Touch</span>
+            <h2 class="section-title">Let's Build Something</h2>
+            <hr class="section-rule">
+        </div>
+        <div class="contact-layout">
+
+            <!-- Left: info -->
+            <div class="contact-info reveal-left">
+                <h3>Tell us about your project.</h3>
+                <p>Whether you've got blueprints ready or just an idea, we want to hear it. Fill out the form and we'll get back to you within one business day with an honest conversation — no pressure, no runaround.</p>
+                <a href="mailto:Admin@vestgaard.ca" class="contact-email">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                    Admin@vestgaard.ca
+                </a>
+                <div class="contact-detail">
+                    <div class="contact-detail-row">
+                        <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                        <span>Western Canada</span>
+                    </div>
+                    <div class="contact-detail-row">
+                        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                        <span>Response within 1 business day</span>
+                    </div>
+                    <div class="contact-detail-row">
+                        <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                        <span>Free project consultation</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: form -->
+            <div class="contact-form-wrap reveal-right" id="contact-form">
+
+                <!-- The form -->
+                <form id="projectForm" novalidate>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="fname">First Name</label>
+                            <input type="text" id="fname" name="fname" placeholder="Jake" autocomplete="given-name">
+                            <span class="form-error" id="fname-err">Required</span>
+                        </div>
+                        <div class="form-group">
+                            <label for="lname">Last Name</label>
+                            <input type="text" id="lname" name="lname" placeholder="Smith" autocomplete="family-name">
+                            <span class="form-error" id="lname-err">Required</span>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="email">Email Address</label>
+                            <input type="email" id="email" name="email" placeholder="you@email.com" autocomplete="email">
+                            <span class="form-error" id="email-err">Enter a valid email</span>
+                        </div>
+                        <div class="form-group">
+                            <label for="phone">Phone (optional)</label>
+                            <input type="tel" id="phone" name="phone" placeholder="+1 (000) 000-0000" autocomplete="tel">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="project">Project Type</label>
+                        <select id="project" name="project">
+                            <option value="" disabled selected>Select a service…</option>
+                            <option>Structural Framing</option>
+                            <option>Custom Home Building</option>
+                            <option>Multi-Family / Commercial</option>
+                            <option>Roof Systems</option>
+                            <option>General Construction</option>
+                            <option>Project Consultation</option>
+                            <option>Other / Not Sure Yet</option>
+                        </select>
+                        <span class="form-error" id="project-err">Please select a project type</span>
+                    </div>
+                    <div class="form-group">
+                        <label for="message">Tell Us About Your Project</label>
+                        <textarea id="message" name="message" placeholder="Briefly describe your project — location, size, timeline, anything that's helpful…"></textarea>
+                        <span class="form-error" id="message-err">Please add a brief description</span>
+                    </div>
+                    <button type="submit" class="form-submit" id="formSubmit">
+                        <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                        Send Message
+                    </button>
+                </form>
+
+                <!-- Success state (hidden until submit) -->
+                <div class="form-success" id="formSuccess">
+                    <div class="success-icon">
+                        <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                    </div>
+                    <h4>Message Sent.</h4>
+                    <p>Thanks — we'll review your project details and get back to you within one business day. Talk soon.</p>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
     <footer>
-        <p>Disclaimer: Some of these links are affiliate links, by purchasing a product from an affiliate link, I may be elligble to recieve a commission</p>
+        <p>&copy; 2026 Vestgaard Construction &mdash; vestgaard.ca</p>
+        <div class="footer-links">
+            <a href="https://www.tiktok.com/@vestgaardconstruction" target="_blank" rel="noopener">TikTok</a>
+            <a href="https://www.youtube.com/channel/UCnDDDNAO48EFtACnDyd4-aA" target="_blank" rel="noopener">YouTube</a>
+            <a href="https://twitter.com/vestgaardltd" target="_blank" rel="noopener">X</a>
+            <a href="https://www.instagram.com/vestgaardconstruction/" target="_blank" rel="noopener">Instagram</a>
+        </div>
     </footer>
-	
-	
-	
-</body>
 
+    <script>
+        /* ── NAV SCROLL ── */
+        const nav = document.getElementById('nav');
+        const navToggle = document.getElementById('navToggle');
+        const navLinks  = document.getElementById('navLinks');
+
+        window.addEventListener('scroll', () => {
+            nav.classList.toggle('scrolled', window.scrollY > 60);
+        }, { passive: true });
+
+        navToggle.addEventListener('click', () => navLinks.classList.toggle('open'));
+        navLinks.querySelectorAll('a').forEach(a => a.addEventListener('click', () => navLinks.classList.remove('open')));
+
+        /* ── HERO PARALLAX ── */
+        const heroBg  = document.getElementById('hero-bg');
+        const heroEl  = document.getElementById('hero');
+
+        function updateParallax() {
+            const scrollY = window.scrollY;
+            const heroH   = heroEl.offsetHeight;
+            if (scrollY <= heroH) {
+                // move the bg upward at 40% of scroll speed → creates depth
+                heroBg.style.transform = `translateY(${scrollY * 0.4}px)`;
+            }
+        }
+        window.addEventListener('scroll', updateParallax, { passive: true });
+
+        /* ── SCROLL REVEAL ── */
+        const allReveal = document.querySelectorAll('.reveal, .reveal-left, .reveal-right, .reveal-scale');
+
+        const io = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('vis');
+                    io.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.12 });
+
+        allReveal.forEach(el => io.observe(el));
+
+        /* ── HERO → FORM SCROLL ── */
+        document.getElementById('heroFormBtn').addEventListener('click', function(e) {
+            e.preventDefault();
+            document.getElementById('contact-form').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        });
+
+        /* ── CONTACT FORM ── */
+        const form        = document.getElementById('projectForm');
+        const formSuccess = document.getElementById('formSuccess');
+        const submitBtn   = document.getElementById('formSubmit');
+
+        function validateField(id, errId, checkFn) {
+            const el  = document.getElementById(id);
+            const err = document.getElementById(errId);
+            const ok  = checkFn(el.value.trim());
+            el.classList.toggle('err', !ok);
+            if (err) err.classList.toggle('show', !ok);
+            return ok;
+        }
+
+        // Live clear on input
+        ['fname','lname','email','project','message'].forEach(id => {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.addEventListener('input', () => {
+                el.classList.remove('err');
+                const err = document.getElementById(id + '-err');
+                if (err) err.classList.remove('show');
+            });
+        });
+
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const okFirst   = validateField('fname',   'fname-err',   v => v.length > 0);
+            const okLast    = validateField('lname',   'lname-err',   v => v.length > 0);
+            const okEmail   = validateField('email',   'email-err',   v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v));
+            const okProject = validateField('project', 'project-err', v => v.length > 0);
+            const okMsg     = validateField('message', 'message-err', v => v.length > 10);
+
+            if (!(okFirst && okLast && okEmail && okProject && okMsg)) return;
+
+            // Build mailto with form data
+            const fname   = document.getElementById('fname').value.trim();
+            const lname   = document.getElementById('lname').value.trim();
+            const email   = document.getElementById('email').value.trim();
+            const phone   = document.getElementById('phone').value.trim();
+            const project = document.getElementById('project').value;
+            const message = document.getElementById('message').value.trim();
+
+            const subject = encodeURIComponent(`Project Inquiry — ${project} | ${fname} ${lname}`);
+            const body    = encodeURIComponent(
+                `Name: ${fname} ${lname}\nEmail: ${email}\nPhone: ${phone || 'Not provided'}\nProject Type: ${project}\n\nMessage:\n${message}`
+            );
+
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;animation:spin 0.8s linear infinite"><path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" opacity="0.25"/><path d="M21 12a9 9 0 00-9-9"/></svg> Sending…`;
+
+            // Small delay for UX feedback, then open mailto
+            setTimeout(() => {
+                window.location.href = `mailto:Admin@vestgaard.ca?subject=${subject}&body=${body}`;
+
+                // Show success after a moment
+                setTimeout(() => {
+                    form.style.display = 'none';
+                    formSuccess.classList.add('show');
+                }, 600);
+            }, 800);
+        });
+    </script>
+    <style>
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</body>
 </html>
