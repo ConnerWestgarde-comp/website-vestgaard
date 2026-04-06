@@ -698,18 +698,54 @@
             .team-grid { grid-template-columns: 1fr; max-width: 420px; margin-left: auto; margin-right: auto; }
             .follow-platforms { grid-template-columns: 1fr 1fr; }
             .platform-card { padding: 2.5rem 1.5rem; }
-            .hero-actions { flex-direction: column; align-items: center; }
+            /* Hero: column stack — no overlap between CTAs, hiring, or scroll chrome */
+            .hero {
+                flex-direction: column;
+                align-items: stretch;
+                justify-content: flex-start;
+                height: auto;
+                min-height: 100svh;
+                min-height: 100dvh;
+                padding: 5.5rem 1.25rem calc(1rem + env(safe-area-inset-bottom, 0));
+                box-sizing: border-box;
+            }
+            .hero-content {
+                flex: 1 1 0;
+                min-height: 0;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                padding: 0 0.25rem 1rem;
+                width: 100%;
+            }
+            .hero-sub { margin-bottom: 1.5rem; }
+            .hero-actions {
+                flex-direction: column;
+                align-items: stretch;
+                width: 100%;
+                max-width: 22rem;
+                margin-left: auto;
+                margin-right: auto;
+                gap: 0.75rem;
+            }
+            .hero-actions .btn { justify-content: center; width: 100%; }
+            .hero-scroll-hint { display: none !important; }
             .hero-hiring {
-                right: auto;
-                left: 50%;
-                bottom: 6.25rem;
+                position: static;
+                flex: 0 0 auto;
+                align-self: center;
                 align-items: center;
                 text-align: center;
-                animation: fadeUpHiringMobile 0.85s ease forwards 1.15s;
+                transform: none;
+                animation: fadeUp 0.85s ease forwards 1.15s;
+                margin-top: 0.25rem;
+                padding-bottom: 0.25rem;
             }
-            @keyframes fadeUpHiringMobile {
-                from { opacity: 0; transform: translateX(-50%) translateY(24px); }
-                to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+            .hero-hiring .btn {
+                white-space: normal;
+                width: 100%;
+                max-width: 22rem;
             }
             footer { flex-direction: column; text-align: center; }
         }
@@ -891,7 +927,13 @@
                     </div>
                     <h3>Gregory Westgarde</h3>
                     <div class="role">Owner</div>
-                    <p>Who is our owner? Please scroll through our social media and you'll get to know Greg. Greg employs all aspects of modern construction technology with his certificate in computer assisted drafting. Greg's most valuable asset is his higher education in finance and accounting; this has enabled him to build a company that not only does good work, but has enabled him to survive through the ups and downs of the market. Vestgaard Construction is built to last.</p>
+                    <p>Greg has over three decades of construction experience 
+                        everything from site preparation to site preperation and finishing; 
+                        the vast majority of gregs experience is in the construction of residential
+                         and multi family homes. Greg employs his university training in finance accounting 
+                         and computer aided drafting to assist him in all aspects of the business. If vestgaard construction
+                          takes on your project, It WILL be completed. </p>
+                        
                 </div>
                 <div class="team-card reveal" style="transition-delay:0.12s">
                     <div class="team-avatar team-avatar--isaiah">
