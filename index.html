@@ -1289,7 +1289,7 @@
                 <div class="hero-contest-inner">
                     <div class="hero-contest-panel hero-contest-panel--upload">
                         <div class="hero-contest-title">Framer of the Year</div>
-                        <p class="hero-contest-desc">Upload your entry video and tell us about it. Max 100&nbsp;MB.</p>
+                        <p class="hero-contest-desc">Upload your entry video. Max 200&nbsp;MB.</p>
                         <form id="contestForm" class="contest-form" novalidate>
                             <div class="contest-dropzone" id="contestDropzone">
                                 <input type="file" id="contestVideo" name="video" accept="video/*">
@@ -1303,8 +1303,8 @@
                                 <input type="text" id="contestName" name="name" placeholder="Tony Smith" autocomplete="name" required>
                             </div>
                             <div class="contest-field">
-                                <label for="contestAbout">About your entry</label>
-                                <textarea id="contestAbout" name="about" placeholder="What job, trick, or moment are you showing off?" required></textarea>
+                                <label for="contestAbout">Description <span style="font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></label>
+                                <textarea id="contestAbout" name="about" placeholder="Optional notes about your video"></textarea>
                             </div>
                             <div class="contest-field">
                                 <label for="contestEmail">Email</label>
@@ -1684,7 +1684,7 @@
 
         /* ── FRAMER OF THE YEAR UPLOAD (set after deploying worker/README.md) ── */
         const VESTGAARD_CONTEST_API = 'https://vestgaard-contest-upload.green-silence-b58c.workers.dev';
-        const CONTEST_MAX_BYTES = 100 * 1024 * 1024;
+        const CONTEST_MAX_BYTES = 200 * 1024 * 1024;
 
         (function initContestUpload() {
             const contestForm = document.getElementById('contestForm');
@@ -1721,7 +1721,7 @@
                     return;
                 }
                 if (file.size > CONTEST_MAX_BYTES) {
-                    showMsg(errorEl, 'Video must be 100 MB or smaller.');
+                    showMsg(errorEl, 'Video must be 200 MB or smaller.');
                     return;
                 }
                 const dt = new DataTransfer();
@@ -1773,16 +1773,15 @@
                 const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
                 let valid = true;
                 document.getElementById('contestName').classList.toggle('err', !name);
-                document.getElementById('contestAbout').classList.toggle('err', about.length < 10);
                 document.getElementById('contestEmail').classList.toggle('err', !emailOk);
                 if (!video) valid = false;
-                if (!name || about.length < 10 || !emailOk) valid = false;
+                if (!name || !emailOk) valid = false;
                 if (!valid) {
-                    showMsg(errorEl, 'Please fill in your name, email, entry description (10+ characters), and a video.');
+                    showMsg(errorEl, 'Please fill in your name, email, and a video.');
                     return;
                 }
                 if (video.size > CONTEST_MAX_BYTES) {
-                    showMsg(errorEl, 'Video must be 100 MB or smaller.');
+                    showMsg(errorEl, 'Video must be 200 MB or smaller.');
                     return;
                 }
 
