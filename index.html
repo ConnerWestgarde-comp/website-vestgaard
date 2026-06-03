@@ -372,6 +372,141 @@
             max-width: 300px;
             line-height: 1.6;
         }
+        .hero-contest-panel--upload {
+            text-align: left;
+            width: 100%;
+            max-width: 360px;
+        }
+        .hero-contest-panel--upload .hero-contest-desc {
+            max-width: none;
+            text-align: center;
+        }
+        .contest-form { display: flex; flex-direction: column; gap: 1rem; }
+        .contest-dropzone {
+            position: relative;
+            border: 2px dashed rgba(212,145,42,0.45);
+            border-radius: 4px;
+            padding: 1.35rem 1rem;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color 0.25s, background 0.25s;
+            background: rgba(255,255,255,0.02);
+        }
+        .contest-dropzone:hover,
+        .contest-dropzone.dragover {
+            border-color: var(--amber);
+            background: rgba(212,145,42,0.06);
+        }
+        .contest-dropzone.has-file {
+            border-style: solid;
+            border-color: rgba(212,145,42,0.55);
+        }
+        .contest-dropzone input[type="file"] {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            cursor: pointer;
+            width: 100%;
+            height: 100%;
+        }
+        .contest-dropzone-icon {
+            font-size: 1.5rem;
+            margin-bottom: 0.35rem;
+            opacity: 0.85;
+        }
+        .contest-dropzone-label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--white);
+            margin-bottom: 0.25rem;
+        }
+        .contest-dropzone-hint {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+        .contest-dropzone-file {
+            margin-top: 0.65rem;
+            font-size: 0.75rem;
+            color: var(--amber);
+            font-weight: 600;
+            word-break: break-all;
+        }
+        .contest-field label {
+            display: block;
+            font-size: 0.68rem;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 0.4rem;
+        }
+        .contest-field input,
+        .contest-field textarea {
+            width: 100%;
+            padding: 0.75rem 0.9rem;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.88rem;
+            color: var(--white);
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 3px;
+            outline: none;
+            transition: border-color 0.25s;
+        }
+        .contest-field textarea {
+            min-height: 88px;
+            resize: vertical;
+            line-height: 1.55;
+        }
+        .contest-field input::placeholder,
+        .contest-field textarea::placeholder { color: var(--text-muted); opacity: 0.7; }
+        .contest-field input:focus,
+        .contest-field textarea:focus { border-color: var(--amber); }
+        .contest-field input.err,
+        .contest-field textarea.err { border-color: #c45c5c; }
+        .contest-submit {
+            width: 100%;
+            justify-content: center;
+            margin-top: 0.15rem;
+        }
+        .contest-submit:disabled {
+            opacity: 0.65;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .contest-progress {
+            display: none;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+        .contest-progress.show { display: flex; }
+        .contest-progress-bar {
+            height: 4px;
+            background: rgba(255,255,255,0.08);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        .contest-progress-fill {
+            height: 100%;
+            width: 0%;
+            background: var(--amber);
+            transition: width 0.15s ease;
+        }
+        .contest-progress-text {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            text-align: center;
+        }
+        .contest-msg {
+            font-size: 0.78rem;
+            line-height: 1.55;
+            text-align: center;
+            display: none;
+        }
+        .contest-msg.show { display: block; }
+        .contest-msg.error { color: #e88a8a; }
+        .contest-msg.success { color: var(--amber-light); }
         .btn-contest {
             background: linear-gradient(135deg, var(--amber-light) 0%, var(--amber) 55%, var(--amber-dark) 100%);
             color: var(--charcoal);
@@ -1058,6 +1193,7 @@
             }
             .hero-contest-inner { width: 100%; }
             .hero-contest-panel { padding: 1.25rem 1.35rem 1.35rem; }
+            .hero-contest-panel--upload { max-width: 22rem; }
             .hero-contest-desc { max-width: none; }
             .btn-contest { justify-content: center; width: 100%; }
             .hero-scroll-hint { display: none !important; }
@@ -1151,10 +1287,37 @@
             <!-- TEMP: remove hero-contest block when Framer of the Year contest ends -->
             <div class="hero-contest">
                 <div class="hero-contest-inner">
-                    <div class="hero-contest-panel">
+                    <div class="hero-contest-panel hero-contest-panel--upload">
                         <div class="hero-contest-title">Framer of the Year</div>
-                        <p class="hero-contest-desc">Submit your entry — open the folder and drag your video in to enter.</p>
-                        <a href="https://www.dropbox.com/scl/fo/w8aukqm8ald3hcsfp1gor/AFmMtlG37Qvpwj7VG9poWmo?rlkey=lqq6s0snbvqncc65b7t0jyp4k&st=mwz8up91&dl=0" target="_blank" rel="noopener noreferrer" class="btn btn-contest">Submit Your Video ↗</a>
+                        <p class="hero-contest-desc">Upload your entry video and tell us about it. Max 100&nbsp;MB.</p>
+                        <form id="contestForm" class="contest-form" novalidate>
+                            <div class="contest-dropzone" id="contestDropzone">
+                                <input type="file" id="contestVideo" name="video" accept="video/*">
+                                <div class="contest-dropzone-icon" aria-hidden="true">▶</div>
+                                <div class="contest-dropzone-label">Choose or drop your video</div>
+                                <p class="contest-dropzone-hint">Works from your phone gallery — MP4, MOV, WebM</p>
+                                <p class="contest-dropzone-file" id="contestFileName" hidden></p>
+                            </div>
+                            <div class="contest-field">
+                                <label for="contestName">Your name</label>
+                                <input type="text" id="contestName" name="name" placeholder="Tony Smith" autocomplete="name" required>
+                            </div>
+                            <div class="contest-field">
+                                <label for="contestAbout">About your entry</label>
+                                <textarea id="contestAbout" name="about" placeholder="What job, trick, or moment are you showing off?" required></textarea>
+                            </div>
+                            <div class="contest-field">
+                                <label for="contestEmail">Email</label>
+                                <input type="email" id="contestEmail" name="email" placeholder="you@email.com" autocomplete="email" required>
+                            </div>
+                            <button type="submit" class="btn btn-contest contest-submit" id="contestSubmit">Submit entry</button>
+                            <div class="contest-progress" id="contestProgress" aria-live="polite">
+                                <div class="contest-progress-bar"><div class="contest-progress-fill" id="contestProgressFill"></div></div>
+                                <span class="contest-progress-text" id="contestProgressText">Uploading… 0%</span>
+                            </div>
+                            <p class="contest-msg error" id="contestError"></p>
+                            <p class="contest-msg success" id="contestSuccess"></p>
+                        </form>
                     </div>
                 </div>
             </div>
@@ -1518,6 +1681,153 @@
         }, { threshold: 0.12 });
 
         allReveal.forEach(el => io.observe(el));
+
+        /* ── FRAMER OF THE YEAR UPLOAD (set after deploying worker/README.md) ── */
+        const VESTGAARD_CONTEST_API = 'https://vestgaard-contest-upload.green-silence-b58c.workers.dev';
+        const CONTEST_MAX_BYTES = 100 * 1024 * 1024;
+
+        (function initContestUpload() {
+            const contestForm = document.getElementById('contestForm');
+            if (!contestForm) return;
+
+            const dropzone = document.getElementById('contestDropzone');
+            const videoInput = document.getElementById('contestVideo');
+            const fileNameEl = document.getElementById('contestFileName');
+            const submitBtn = document.getElementById('contestSubmit');
+            const progressWrap = document.getElementById('contestProgress');
+            const progressFill = document.getElementById('contestProgressFill');
+            const progressText = document.getElementById('contestProgressText');
+            const errorEl = document.getElementById('contestError');
+            const successEl = document.getElementById('contestSuccess');
+
+            function showMsg(el, text) {
+                errorEl.classList.remove('show');
+                successEl.classList.remove('show');
+                if (!text) return;
+                el.textContent = text;
+                el.classList.add('show');
+            }
+
+            function setFile(file) {
+                if (!file) {
+                    dropzone.classList.remove('has-file');
+                    fileNameEl.hidden = true;
+                    fileNameEl.textContent = '';
+                    videoInput.value = '';
+                    return;
+                }
+                if (!file.type.startsWith('video/')) {
+                    showMsg(errorEl, 'Please choose a video file.');
+                    return;
+                }
+                if (file.size > CONTEST_MAX_BYTES) {
+                    showMsg(errorEl, 'Video must be 100 MB or smaller.');
+                    return;
+                }
+                const dt = new DataTransfer();
+                dt.items.add(file);
+                videoInput.files = dt.files;
+                dropzone.classList.add('has-file');
+                fileNameEl.hidden = false;
+                fileNameEl.textContent = file.name + ' (' + (file.size / (1024 * 1024)).toFixed(1) + ' MB)';
+                errorEl.classList.remove('show');
+            }
+
+            videoInput.addEventListener('change', () => {
+                const file = videoInput.files && videoInput.files[0];
+                if (file) setFile(file);
+            });
+
+            ['dragenter', 'dragover'].forEach(evt => {
+                dropzone.addEventListener(evt, e => {
+                    e.preventDefault();
+                    dropzone.classList.add('dragover');
+                });
+            });
+            ['dragleave', 'drop'].forEach(evt => {
+                dropzone.addEventListener(evt, e => {
+                    e.preventDefault();
+                    dropzone.classList.remove('dragover');
+                });
+            });
+            dropzone.addEventListener('drop', e => {
+                const file = e.dataTransfer.files && e.dataTransfer.files[0];
+                if (file) setFile(file);
+            });
+
+            contestForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                errorEl.classList.remove('show');
+                successEl.classList.remove('show');
+
+                if (!VESTGAARD_CONTEST_API) {
+                    showMsg(errorEl, 'Upload is not configured yet. Add your Worker URL to VESTGAARD_CONTEST_API in index.html.');
+                    return;
+                }
+
+                const name = document.getElementById('contestName').value.trim();
+                const about = document.getElementById('contestAbout').value.trim();
+                const email = document.getElementById('contestEmail').value.trim();
+                const video = videoInput.files && videoInput.files[0];
+
+                const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+                let valid = true;
+                document.getElementById('contestName').classList.toggle('err', !name);
+                document.getElementById('contestAbout').classList.toggle('err', about.length < 10);
+                document.getElementById('contestEmail').classList.toggle('err', !emailOk);
+                if (!video) valid = false;
+                if (!name || about.length < 10 || !emailOk) valid = false;
+                if (!valid) {
+                    showMsg(errorEl, 'Please fill in your name, email, entry description (10+ characters), and a video.');
+                    return;
+                }
+                if (video.size > CONTEST_MAX_BYTES) {
+                    showMsg(errorEl, 'Video must be 100 MB or smaller.');
+                    return;
+                }
+
+                const body = new FormData();
+                body.append('name', name);
+                body.append('about', about);
+                body.append('email', email);
+                body.append('video', video, video.name);
+
+                const uploadUrl = VESTGAARD_CONTEST_API.replace(/\/$/, '') + '/upload';
+
+                submitBtn.disabled = true;
+                progressWrap.classList.add('show');
+                progressFill.style.width = '0%';
+                progressText.textContent = 'Uploading… 0%';
+
+                const xhr = new XMLHttpRequest();
+                xhr.open('POST', uploadUrl);
+                xhr.upload.onprogress = function(ev) {
+                    if (!ev.lengthComputable) return;
+                    const pct = Math.round((ev.loaded / ev.total) * 100);
+                    progressFill.style.width = pct + '%';
+                    progressText.textContent = 'Uploading… ' + pct + '%';
+                };
+                xhr.onload = function() {
+                    submitBtn.disabled = false;
+                    progressWrap.classList.remove('show');
+                    let data = {};
+                    try { data = JSON.parse(xhr.responseText || '{}'); } catch (_) {}
+                    if (xhr.status >= 200 && xhr.status < 300 && data.ok) {
+                        contestForm.reset();
+                        setFile(null);
+                        showMsg(successEl, 'Entry submitted. Thanks — good luck!');
+                        return;
+                    }
+                    showMsg(errorEl, data.error || 'Upload failed. Please try again.');
+                };
+                xhr.onerror = function() {
+                    submitBtn.disabled = false;
+                    progressWrap.classList.remove('show');
+                    showMsg(errorEl, 'Network error. Check your connection and try again.');
+                };
+                xhr.send(body);
+            });
+        })();
 
         /* ── HERO → FORM SCROLL ── */
         document.getElementById('heroFormBtn').addEventListener('click', function(e) {

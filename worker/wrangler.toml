@@ -1,0 +1,11 @@
+name = "vestgaard-contest-upload"
+main = "src/index.ts"
+compatibility_date = "2024-11-01"
+
+[[r2_buckets]]
+binding = "CONTEST_BUCKET"
+bucket_name = "vestgaard-framer-contest"
+
+[vars]
+ALLOWED_ORIGINS = "https://vestgaard.ca,https://www.vestgaard.ca,http://127.0.0.1:5500,http://localhost:5500"
+MAX_UPLOAD_MB = "100"
