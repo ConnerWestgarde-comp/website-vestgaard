@@ -1151,6 +1151,37 @@
             .platform-card:nth-child(3) { border-top: 1px solid rgba(255,255,255,0.06); border-right: 1px solid rgba(255,255,255,0.06); }
             .platform-card:nth-child(4) { border-top: 1px solid rgba(255,255,255,0.06); border-right: none; }
         }
+        /* Large desktop: stack contest + hiring so the form is not covered */
+        @media (min-width: 901px) {
+            .hero {
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                height: auto;
+                min-height: 100vh;
+                padding: 5.5rem 3rem 5rem;
+                box-sizing: border-box;
+                overflow-x: hidden;
+                overflow-y: visible;
+            }
+            .hero-content {
+                padding-bottom: 0.5rem;
+            }
+            .hero-contest {
+                margin-bottom: 1.5rem;
+            }
+            .hero-scroll-hint { display: none !important; }
+            .hero-hiring {
+                position: static;
+                align-self: center;
+                align-items: center;
+                text-align: center;
+                transform: none;
+                margin-top: 2.75rem;
+                margin-bottom: 1.5rem;
+                padding-bottom: 0.25rem;
+            }
+        }
         @media (max-width: 900px) {
             /* Hero: stack CTAs, contest, and hiring — avoid overlap on phones/tablets */
             .hero {
@@ -1160,7 +1191,7 @@
                 height: auto;
                 min-height: 100svh;
                 min-height: 100dvh;
-                padding: 5.5rem 1.25rem calc(2rem + env(safe-area-inset-bottom, 0));
+                padding: 5.5rem 1.25rem calc(3.5rem + env(safe-area-inset-bottom, 0));
                 box-sizing: border-box;
                 overflow-x: hidden;
             }
@@ -1171,7 +1202,7 @@
                 flex-direction: column;
                 justify-content: flex-start;
                 align-items: center;
-                padding: 0 0.25rem 0;
+                padding: 0 0.25rem 0.5rem;
                 width: 100%;
             }
             .hero-sub { margin-bottom: 1.5rem; }
@@ -1206,6 +1237,7 @@
                 transform: none;
                 animation: fadeUp 0.85s ease forwards 1.15s;
                 margin-top: 2.5rem;
+                margin-bottom: 1rem;
                 padding-bottom: 0.5rem;
                 width: 100%;
                 max-width: 22rem;
@@ -1214,6 +1246,9 @@
                 white-space: normal;
                 width: 100%;
                 max-width: 22rem;
+            }
+            .hero-contest {
+                margin-bottom: 1rem;
             }
         }
         @media (max-width: 768px) {

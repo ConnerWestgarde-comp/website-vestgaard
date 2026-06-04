@@ -99,9 +99,9 @@ async function handleUpload(request: Request, env: Env, cors: Headers): Promise<
   if (!name || name.length > 120) {
     return jsonResponse({ error: "Please enter your name." }, 400, cors);
   }
-  if (!about || about.length < 10 || about.length > 4000) {
+  if (about.length > 4000) {
     return jsonResponse(
-      { error: "Please write at least 10 characters about your entry." },
+      { error: "Description must be 4000 characters or less." },
       400,
       cors
     );
@@ -136,7 +136,7 @@ async function handleUpload(request: Request, env: Env, cors: Headers): Promise<
     submittedAt,
     name,
     email,
-    about,
+    about: about || null,
     originalFilename: video.name,
     contentType: type,
     sizeBytes: video.size,
