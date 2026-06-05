@@ -1324,7 +1324,7 @@
                 <div class="hero-contest-inner">
                     <div class="hero-contest-panel hero-contest-panel--upload">
                         <div class="hero-contest-title">Framer of the Year</div>
-                        <p class="hero-contest-desc">Upload your entry video. Max 200&nbsp;MB.</p>
+                        <p class="hero-contest-desc">Upload your entry video. Max 450&nbsp;MB.</p>
                         <form id="contestForm" class="contest-form" novalidate>
                             <div class="contest-dropzone" id="contestDropzone">
                                 <input type="file" id="contestVideo" name="video" accept="video/*">
@@ -1719,7 +1719,7 @@
 
         /* ── FRAMER OF THE YEAR UPLOAD (set after deploying worker/README.md) ── */
         const VESTGAARD_CONTEST_API = 'https://vestgaard-contest-upload.green-silence-b58c.workers.dev';
-        const CONTEST_MAX_BYTES = 200 * 1024 * 1024;
+        const CONTEST_MAX_BYTES = 450 * 1024 * 1024;
 
         (function initContestUpload() {
             const contestForm = document.getElementById('contestForm');
@@ -1756,7 +1756,7 @@
                     return;
                 }
                 if (file.size > CONTEST_MAX_BYTES) {
-                    showMsg(errorEl, 'Video must be 200 MB or smaller.');
+                    showMsg(errorEl, 'Video must be 450 MB or smaller.');
                     return;
                 }
                 const dt = new DataTransfer();
@@ -1816,7 +1816,7 @@
                     return;
                 }
                 if (video.size > CONTEST_MAX_BYTES) {
-                    showMsg(errorEl, 'Video must be 200 MB or smaller.');
+                    showMsg(errorEl, 'Video must be 450 MB or smaller.');
                     return;
                 }
 
