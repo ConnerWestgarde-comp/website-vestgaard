@@ -116,6 +116,15 @@ async function loadPending(env: Env, entryId: string): Promise<PendingUpload | n
   return JSON.parse(await obj.text()) as PendingUpload;
 }
 
+async function loadPendingWithRetry(env: Env, entryId: string): Promise<PendingUpload | null> {
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const pending = await loadPending(env, entryId);
+    if (pending?.uploadId) return pending;
+    await new Promise((r) => setTimeout(r, 80 * (attempt + 1)));
+  }
+  return null;
+}
+
 async function logFailure(
   env: Env,
   reqId: string,
@@ -195,9 +204,13 @@ async function handleInit(request: Request, env: Env, cors: Headers): Promise<Re
   const videoKey = `entries/${entryId}/${safeName.includes(".") ? safeName : "video" + extFromType(contentType)}`;
 
   try {
-    const multipart = env.CONTEST_BUCKET.createMultipartUpload(videoKey, {
+    const multipart = await env.CONTEST_BUCKET.createMultipartUpload(videoKey, {
       httpMetadata: { contentType },
     });
+
+    if (!multipart.uploadId) {
+      throw new Error("R2 createMultipartUpload returned no uploadId");
+    }
 
     const pending: PendingUpload = {
       entryId,
@@ -215,6 +228,11 @@ async function handleInit(request: Request, env: Env, cors: Headers): Promise<Re
     await env.CONTEST_BUCKET.put(pendingKey(entryId), JSON.stringify(pending), {
       httpMetadata: { contentType: "application/json" },
     });
+
+    const verified = await loadPending(env, entryId);
+    if (!verified?.uploadId || verified.uploadId !== multipart.uploadId) {
+      throw new Error("Could not verify pending upload session in R2");
+    }
 
     log("upload_init", {
       reqId,
@@ -254,31 +272,34 @@ async function handlePart(request: Request, env: Env, cors: Headers): Promise<Re
     return jsonResponse({ error: "Missing entryId, uploadId, or partNumber.", reqId }, 400, cors, reqId);
   }
 
-  const pending = await loadPending(env, entryId);
-  if (!pending || pending.uploadId !== uploadId) {
-    await logFailure(env, reqId, "part_unknown_upload", { entryId, uploadId, partNumber });
-    return jsonResponse({ error: "Upload session not found or expired. Please start over.", reqId }, 404, cors, reqId);
+  const pending = await loadPendingWithRetry(env, entryId);
+  if (!pending) {
+    await logFailure(env, reqId, "part_pending_missing", { entryId, uploadId, partNumber });
+    return jsonResponse({ error: "Upload session not found. Please start over.", reqId }, 404, cors, reqId);
+  }
+  if (pending.uploadId !== uploadId) {
+    await logFailure(env, reqId, "part_upload_id_mismatch", {
+      entryId,
+      uploadId,
+      storedUploadId: pending.uploadId,
+      partNumber,
+    });
+    return jsonResponse({ error: "Upload session mismatch. Please start over.", reqId }, 404, cors, reqId);
   }
 
-  let data: ArrayBuffer;
-  try {
-    data = await request.arrayBuffer();
-  } catch (err) {
-    await logFailure(env, reqId, "part_read_failed", { entryId, partNumber, message: String(err) });
-    return jsonResponse({ error: "Could not read upload chunk.", reqId }, 400, cors, reqId);
+  if (!request.body) {
+    return jsonResponse({ error: "Missing chunk body.", reqId }, 400, cors, reqId);
   }
 
-  if (data.byteLength === 0) {
-    return jsonResponse({ error: "Empty chunk.", reqId }, 400, cors, reqId);
-  }
-  if (data.byteLength > PART_SIZE_BYTES + 512 * 1024) {
+  const contentLength = request.headers.get("Content-Length");
+  if (contentLength && Number(contentLength) > PART_SIZE_BYTES + 512 * 1024) {
     return jsonResponse({ error: "Chunk too large.", reqId }, 413, cors, reqId);
   }
 
   try {
     const multipart = env.CONTEST_BUCKET.resumeMultipartUpload(pending.videoKey, uploadId);
-    const part = await multipart.uploadPart(partNumber, data);
-    log("upload_part", { reqId, entryId, partNumber, bytes: data.byteLength });
+    const part = await multipart.uploadPart(partNumber, request.body);
+    log("upload_part", { reqId, entryId, partNumber, uploadId });
     return jsonResponse(
       { ok: true, partNumber: part.partNumber, etag: part.etag, reqId },
       200,
@@ -312,10 +333,18 @@ async function handleComplete(request: Request, env: Env, cors: Headers): Promis
     return jsonResponse({ error: "Missing entryId, uploadId, or parts.", reqId }, 400, cors, reqId);
   }
 
-  const pending = await loadPending(env, entryId);
-  if (!pending || pending.uploadId !== uploadId) {
-    await logFailure(env, reqId, "complete_unknown_upload", { entryId, uploadId });
+  const pending = await loadPendingWithRetry(env, entryId);
+  if (!pending) {
+    await logFailure(env, reqId, "complete_pending_missing", { entryId, uploadId });
     return jsonResponse({ error: "Upload session not found. Please start over.", reqId }, 404, cors, reqId);
+  }
+  if (pending.uploadId !== uploadId) {
+    await logFailure(env, reqId, "complete_upload_id_mismatch", {
+      entryId,
+      uploadId,
+      storedUploadId: pending.uploadId,
+    });
+    return jsonResponse({ error: "Upload session mismatch. Please start over.", reqId }, 404, cors, reqId);
   }
 
   const metaKey = `entries/${entryId}/metadata.json`;

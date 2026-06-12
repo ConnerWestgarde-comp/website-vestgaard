@@ -1908,6 +1908,13 @@
                             sizeBytes: video.size
                         });
                         const init = initResult.data;
+                        if (!init.ok || !init.entryId || !init.uploadId) {
+                            throw Object.assign(new Error('init_invalid'), {
+                                status: initResult.xhr.status,
+                                data: init,
+                                xhr: initResult.xhr
+                            });
+                        }
                         const partSize = init.partSize || (8 * 1024 * 1024);
                         const totalParts = Math.max(1, Math.ceil(video.size / partSize));
                         const uploadedParts = [];
@@ -1953,7 +1960,14 @@
                     } catch (err) {
                         const status = err.status || 0;
                         const data = err.data || {};
-                        if (err.message === 'network_error') {
+                        if (err.message === 'init_invalid') {
+                            showMsg(errorEl, formatUploadError(
+                                'Upload could not start (server session error). Redeploy the Worker and try again.',
+                                status,
+                                data,
+                                err.xhr
+                            ));
+                        } else if (err.message === 'network_error') {
                             showMsg(errorEl, formatUploadError(
                                 'Upload blocked or connection lost. Try Wi‑Fi, disable VPN, or use a smaller/compressed video.',
                                 status,
