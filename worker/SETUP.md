@@ -152,16 +152,31 @@ const VESTGAARD_CONTEST_API = 'http://127.0.0.1:8787';
 
 ---
 
-## Troubleshooting
+## Troubleshooting uploads
 
-| Problem | Fix |
-|--------|-----|
-| “Upload is not configured yet” | Set `VESTGAARD_CONTEST_API` in `index.html` and redeploy the site |
-| CORS error in browser console | Add your site origin to `ALLOWED_ORIGINS`, redeploy Worker |
-| “Storage not configured on server” | R2 binding missing — check `[[r2_buckets]]` in `wrangler.toml` and redeploy |
-| 413 / file too large | Default max is **100 MB** (`MAX_UPLOAD_MB` in `wrangler.toml`) |
-| Upload fails on large videos | Shorten/compress video, or increase limit and redeploy Worker |
-| `wrangler deploy` auth error | Run `npx wrangler login` again |
+### “Network error” on the site (most common)
+
+Cloudflare **Workers reject a single request body over 100 MB** on Free/Pro plans. The site now uploads in **8 MB chunks** via R2 multipart upload so files up to 450 MB work. You must **redeploy the Worker** after pulling this change:
+
+```bash
+cd worker && npm run deploy
+```
+
+### See what failed
+
+1. **Worker logs** — Cloudflare Dashboard → **Workers & Pages** → **vestgaard-contest-upload** → **Logs** (real-time). Look for `upload_failure`, `cors_rejected`, `part_upload_failed`.
+2. **R2 failure log** — bucket **vestgaard-framer-contest** → prefix **`failures/`** — JSON files with error reason and `reqId`.
+3. **User’s error message** — now includes `ref <id>` and `ray <cf-ray>` when available; match `ref` to logs.
+
+### Other causes
+
+| Symptom | Likely cause |
+|--------|----------------|
+| Works for some users, not others | Large file (>100 MB) on old single-request upload; chunk upload fixes this |
+| Only on mobile / in-app browser | Open **vestgaard.ca** in Safari/Chrome, not embedded TikTok/Instagram browser |
+| CORS / 403 | Origin not allowed — must be `https://vestgaard.ca` or `https://www.vestgaard.ca` |
+| 413 | File over 450 MB or chunk too large |
+
 
 ---
 

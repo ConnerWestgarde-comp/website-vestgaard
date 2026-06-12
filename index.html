@@ -1820,46 +1820,156 @@
                     return;
                 }
 
-                const body = new FormData();
-                body.append('name', name);
-                body.append('about', about);
-                body.append('email', email);
-                body.append('video', video, video.name);
-
-                const uploadUrl = VESTGAARD_CONTEST_API.replace(/\/$/, '') + '/upload';
+                const uploadUrl = VESTGAARD_CONTEST_API.replace(/\/$/, '');
 
                 submitBtn.disabled = true;
                 progressWrap.classList.add('show');
                 progressFill.style.width = '0%';
-                progressText.textContent = 'Uploading… 0%';
+                progressText.textContent = 'Starting upload…';
 
-                const xhr = new XMLHttpRequest();
-                xhr.open('POST', uploadUrl);
-                xhr.upload.onprogress = function(ev) {
-                    if (!ev.lengthComputable) return;
-                    const pct = Math.round((ev.loaded / ev.total) * 100);
-                    progressFill.style.width = pct + '%';
-                    progressText.textContent = 'Uploading… ' + pct + '%';
-                };
-                xhr.onload = function() {
-                    submitBtn.disabled = false;
-                    progressWrap.classList.remove('show');
-                    let data = {};
-                    try { data = JSON.parse(xhr.responseText || '{}'); } catch (_) {}
-                    if (xhr.status >= 200 && xhr.status < 300 && data.ok) {
-                        contestForm.reset();
-                        setFile(null);
-                        showMsg(successEl, 'Entry submitted. Thanks — good luck!');
-                        return;
+                function formatUploadError(label, status, data, xhr) {
+                    const reqId = (data && data.reqId) || (xhr && xhr.getResponseHeader('X-Upload-Request-Id'));
+                    const cfRay = xhr && xhr.getResponseHeader('CF-RAY');
+                    let msg = (data && data.error) || label;
+                    if (status) msg += ' (HTTP ' + status + ')';
+                    if (reqId) msg += ' · ref ' + reqId;
+                    if (cfRay) msg += ' · ray ' + cfRay;
+                    console.error('[contest upload]', msg, data || '');
+                    return msg;
+                }
+
+                function xhrPostJson(url, payload) {
+                    return new Promise(function(resolve, reject) {
+                        const xhr = new XMLHttpRequest();
+                        xhr.open('POST', url);
+                        xhr.setRequestHeader('Content-Type', 'application/json');
+                        xhr.timeout = 120000;
+                        xhr.onload = function() {
+                            let data = {};
+                            try { data = JSON.parse(xhr.responseText || '{}'); } catch (_) {}
+                            if (xhr.status >= 200 && xhr.status < 300) {
+                                resolve({ data: data, xhr: xhr });
+                                return;
+                            }
+                            reject(Object.assign(new Error('request_failed'), {
+                                status: xhr.status,
+                                data: data,
+                                xhr: xhr
+                            }));
+                        };
+                        xhr.onerror = function() {
+                            reject(Object.assign(new Error('network_error'), { xhr: xhr, status: xhr.status || 0 }));
+                        };
+                        xhr.ontimeout = function() {
+                            reject(Object.assign(new Error('timeout'), { xhr: xhr, status: 0 }));
+                        };
+                        xhr.send(JSON.stringify(payload));
+                    });
+                }
+
+                function xhrPostPart(url, chunk, onPartProgress) {
+                    return new Promise(function(resolve, reject) {
+                        const xhr = new XMLHttpRequest();
+                        xhr.open('POST', url);
+                        xhr.setRequestHeader('Content-Type', 'application/octet-stream');
+                        xhr.timeout = 0;
+                        xhr.upload.onprogress = onPartProgress;
+                        xhr.onload = function() {
+                            let data = {};
+                            try { data = JSON.parse(xhr.responseText || '{}'); } catch (_) {}
+                            if (xhr.status >= 200 && xhr.status < 300 && data.ok) {
+                                resolve({ data: data, xhr: xhr });
+                                return;
+                            }
+                            reject(Object.assign(new Error('part_failed'), {
+                                status: xhr.status,
+                                data: data,
+                                xhr: xhr
+                            }));
+                        };
+                        xhr.onerror = function() {
+                            reject(Object.assign(new Error('network_error'), { xhr: xhr, status: xhr.status || 0 }));
+                        };
+                        xhr.ontimeout = function() {
+                            reject(Object.assign(new Error('timeout'), { xhr: xhr, status: 0 }));
+                        };
+                        xhr.send(chunk);
+                    });
+                }
+
+                (async function runUpload() {
+                    try {
+                        const initResult = await xhrPostJson(uploadUrl + '/upload/init', {
+                            name: name,
+                            email: email,
+                            about: about,
+                            filename: video.name,
+                            contentType: video.type || 'video/mp4',
+                            sizeBytes: video.size
+                        });
+                        const init = initResult.data;
+                        const partSize = init.partSize || (8 * 1024 * 1024);
+                        const totalParts = Math.max(1, Math.ceil(video.size / partSize));
+                        const uploadedParts = [];
+
+                        for (let i = 0; i < totalParts; i++) {
+                            const partNumber = i + 1;
+                            const start = i * partSize;
+                            const end = Math.min(start + partSize, video.size);
+                            const chunk = video.slice(start, end);
+                            const partUrl = uploadUrl + '/upload/part?entryId=' + encodeURIComponent(init.entryId)
+                                + '&uploadId=' + encodeURIComponent(init.uploadId)
+                                + '&partNumber=' + partNumber;
+
+                            const partResult = await xhrPostPart(partUrl, chunk, function(ev) {
+                                if (!ev.lengthComputable) return;
+                                const partPct = ev.loaded / ev.total;
+                                const overall = ((i + partPct) / totalParts) * 100;
+                                const pct = Math.round(overall);
+                                progressFill.style.width = pct + '%';
+                                progressText.textContent = 'Uploading… ' + pct + '% (part ' + partNumber + ' of ' + totalParts + ')';
+                            });
+
+                            uploadedParts.push({
+                                partNumber: partResult.data.partNumber,
+                                etag: partResult.data.etag
+                            });
+                        }
+
+                        progressText.textContent = 'Finishing upload…';
+                        const completeResult = await xhrPostJson(uploadUrl + '/upload/complete', {
+                            entryId: init.entryId,
+                            uploadId: init.uploadId,
+                            parts: uploadedParts
+                        });
+
+                        if (completeResult.data.ok) {
+                            contestForm.reset();
+                            setFile(null);
+                            showMsg(successEl, 'Entry submitted. Thanks — good luck!');
+                            return;
+                        }
+                        showMsg(errorEl, formatUploadError('Upload failed', 0, completeResult.data, completeResult.xhr));
+                    } catch (err) {
+                        const status = err.status || 0;
+                        const data = err.data || {};
+                        if (err.message === 'network_error') {
+                            showMsg(errorEl, formatUploadError(
+                                'Upload blocked or connection lost. Try Wi‑Fi, disable VPN, or use a smaller/compressed video.',
+                                status,
+                                data,
+                                err.xhr
+                            ));
+                        } else if (err.message === 'timeout') {
+                            showMsg(errorEl, formatUploadError('Upload timed out. Try again on a stronger connection.', status, data, err.xhr));
+                        } else {
+                            showMsg(errorEl, formatUploadError('Upload failed', status, data, err.xhr));
+                        }
+                    } finally {
+                        submitBtn.disabled = false;
+                        progressWrap.classList.remove('show');
                     }
-                    showMsg(errorEl, data.error || 'Upload failed. Please try again.');
-                };
-                xhr.onerror = function() {
-                    submitBtn.disabled = false;
-                    progressWrap.classList.remove('show');
-                    showMsg(errorEl, 'Network error. Check your connection and try again.');
-                };
-                xhr.send(body);
+                })();
             });
         })();
 

@@ -4,6 +4,9 @@ export interface Env {
   MAX_UPLOAD_MB?: string;
 }
 
+/** Each part must be ≥ 5 MiB except the last; keep under Workers 100 MB request limit. */
+const PART_SIZE_BYTES = 8 * 1024 * 1024;
+
 const VIDEO_TYPES = new Set([
   "video/mp4",
   "video/quicktime",
@@ -13,6 +16,19 @@ const VIDEO_TYPES = new Set([
   "video/3gpp2",
   "video/x-m4v",
 ]);
+
+interface PendingUpload {
+  entryId: string;
+  uploadId: string;
+  videoKey: string;
+  name: string;
+  email: string;
+  about: string | null;
+  originalFilename: string;
+  contentType: string;
+  sizeBytes: number;
+  submittedAt: string;
+}
 
 function parseMaxBytes(env: Env): number {
   const mb = Number(env.MAX_UPLOAD_MB ?? "100");
@@ -25,29 +41,50 @@ function allowedOrigins(env: Env): string[] {
   return raw.split(",").map((o) => o.trim()).filter(Boolean);
 }
 
+function isAllowedOrigin(origin: string, env: Env): boolean {
+  if (!origin) return true;
+  const allowed = allowedOrigins(env);
+  if (allowed.includes(origin)) return true;
+  try {
+    const host = new URL(origin).hostname.toLowerCase();
+    if (host === "vestgaard.ca" || host === "www.vestgaard.ca") return true;
+  } catch {
+    /* ignore */
+  }
+  return false;
+}
+
 function corsHeaders(request: Request, env: Env): Headers {
   const origin = request.headers.get("Origin") ?? "";
-  const allowed = allowedOrigins(env);
   const headers = new Headers();
-  if (origin && allowed.includes(origin)) {
-    headers.set("Access-Control-Allow-Origin", origin);
+  if (isAllowedOrigin(origin, env)) {
+    headers.set("Access-Control-Allow-Origin", origin || "https://vestgaard.ca");
     headers.set("Vary", "Origin");
-  } else if (!origin) {
-    headers.set("Access-Control-Allow-Origin", allowed[0] ?? "*");
   }
-  headers.set("Access-Control-Allow-Methods", "POST, OPTIONS");
-  headers.set("Access-Control-Allow-Headers", "Content-Type");
+  headers.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+  headers.set("Access-Control-Allow-Headers", "Content-Type, Accept");
+  headers.set("Access-Control-Expose-Headers", "CF-RAY, X-Upload-Request-Id");
   headers.set("Access-Control-Max-Age", "86400");
   return headers;
+}
+
+function requestId(): string {
+  return crypto.randomUUID().slice(0, 8);
+}
+
+function log(event: string, data: Record<string, unknown>): void {
+  console.log(JSON.stringify({ event, at: new Date().toISOString(), ...data }));
 }
 
 function jsonResponse(
   body: unknown,
   status: number,
-  cors: Headers
+  cors: Headers,
+  reqId?: string
 ): Response {
   const headers = new Headers(cors);
   headers.set("Content-Type", "application/json");
+  if (reqId) headers.set("X-Upload-Request-Id", reqId);
   return new Response(JSON.stringify(body), { status, headers });
 }
 
@@ -69,107 +106,267 @@ function extFromType(type: string): string {
   return map[type] ?? ".mp4";
 }
 
-async function handleUpload(request: Request, env: Env, cors: Headers): Promise<Response> {
+function pendingKey(entryId: string): string {
+  return `entries/${entryId}/pending.json`;
+}
+
+async function loadPending(env: Env, entryId: string): Promise<PendingUpload | null> {
+  const obj = await env.CONTEST_BUCKET.get(pendingKey(entryId));
+  if (!obj) return null;
+  return JSON.parse(await obj.text()) as PendingUpload;
+}
+
+async function logFailure(
+  env: Env,
+  reqId: string,
+  reason: string,
+  extra: Record<string, unknown>
+): Promise<void> {
+  log("upload_failure", { reqId, reason, ...extra });
+  try {
+    await env.CONTEST_BUCKET.put(
+      `failures/${Date.now()}-${reqId}.json`,
+      JSON.stringify({ reqId, reason, at: new Date().toISOString(), ...extra }, null, 2),
+      { httpMetadata: { contentType: "application/json" } }
+    );
+  } catch (e) {
+    console.error("Could not write failure log to R2", e);
+  }
+}
+
+function validateContactFields(name: string, email: string, about: string): string | null {
+  if (!name || name.length > 120) return "Please enter your name.";
+  if (about.length > 4000) return "Description must be 4000 characters or less.";
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return "Please enter a valid email address.";
+  }
+  return null;
+}
+
+async function handleInit(request: Request, env: Env, cors: Headers): Promise<Response> {
+  const reqId = requestId();
   if (!env.CONTEST_BUCKET) {
-    return jsonResponse({ error: "Storage not configured on server." }, 503, cors);
+    return jsonResponse({ error: "Storage not configured on server.", reqId }, 503, cors, reqId);
   }
 
   const maxBytes = parseMaxBytes(env);
-  const contentLength = request.headers.get("Content-Length");
-  if (contentLength && Number(contentLength) > maxBytes) {
-    return jsonResponse(
-      { error: `Video must be under ${Math.round(maxBytes / (1024 * 1024))} MB.` },
-      413,
-      cors
-    );
-  }
-
-  let form: FormData;
+  let body: Record<string, unknown>;
   try {
-    form = await request.formData();
+    body = (await request.json()) as Record<string, unknown>;
   } catch {
-    return jsonResponse({ error: "Invalid form data." }, 400, cors);
+    await logFailure(env, reqId, "invalid_json", {});
+    return jsonResponse({ error: "Invalid JSON body.", reqId }, 400, cors, reqId);
   }
 
-  const name = String(form.get("name") ?? "").trim();
-  const about = String(form.get("about") ?? "").trim();
-  const email = String(form.get("email") ?? "").trim();
-  const video = form.get("video");
+  const name = String(body.name ?? "").trim();
+  const about = String(body.about ?? "").trim();
+  const email = String(body.email ?? "").trim();
+  const filename = String(body.filename ?? "video.mp4").trim();
+  const contentType = String(body.contentType ?? "video/mp4").toLowerCase();
+  const sizeBytes = Number(body.sizeBytes ?? 0);
 
-  if (!name || name.length > 120) {
-    return jsonResponse({ error: "Please enter your name." }, 400, cors);
+  const fieldErr = validateContactFields(name, email, about);
+  if (fieldErr) {
+    return jsonResponse({ error: fieldErr, reqId }, 400, cors, reqId);
   }
-  if (about.length > 4000) {
+  if (!Number.isFinite(sizeBytes) || sizeBytes <= 0) {
+    return jsonResponse({ error: "Invalid file size.", reqId }, 400, cors, reqId);
+  }
+  if (sizeBytes > maxBytes) {
     return jsonResponse(
-      { error: "Description must be 4000 characters or less." },
-      400,
-      cors
-    );
-  }
-  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    return jsonResponse({ error: "Please enter a valid email address." }, 400, cors);
-  }
-  if (!(video instanceof File) || video.size === 0) {
-    return jsonResponse({ error: "Please choose a video file." }, 400, cors);
-  }
-  if (video.size > maxBytes) {
-    return jsonResponse(
-      { error: `Video must be under ${Math.round(maxBytes / (1024 * 1024))} MB.` },
+      {
+        error: `Video must be under ${Math.round(maxBytes / (1024 * 1024))} MB.`,
+        reqId,
+        sizeBytes,
+        maxBytes,
+      },
       413,
-      cors
+      cors,
+      reqId
     );
   }
-
-  const type = (video.type || "video/mp4").toLowerCase();
-  if (!VIDEO_TYPES.has(type) && !type.startsWith("video/")) {
-    return jsonResponse({ error: "Please upload a video file (MP4, MOV, WebM, etc.)." }, 400, cors);
+  if (!VIDEO_TYPES.has(contentType) && !contentType.startsWith("video/")) {
+    return jsonResponse({ error: "Please upload a video file (MP4, MOV, WebM, etc.).", reqId }, 400, cors, reqId);
   }
 
   const entryId = crypto.randomUUID();
   const submittedAt = new Date().toISOString();
-  const safeName = sanitizeFilename(video.name);
-  const videoKey = `entries/${entryId}/${safeName.includes(".") ? safeName : "video" + extFromType(type)}`;
-  const metaKey = `entries/${entryId}/metadata.json`;
+  const safeName = sanitizeFilename(filename);
+  const videoKey = `entries/${entryId}/${safeName.includes(".") ? safeName : "video" + extFromType(contentType)}`;
 
+  try {
+    const multipart = env.CONTEST_BUCKET.createMultipartUpload(videoKey, {
+      httpMetadata: { contentType },
+    });
+
+    const pending: PendingUpload = {
+      entryId,
+      uploadId: multipart.uploadId,
+      videoKey,
+      name,
+      email,
+      about: about || null,
+      originalFilename: filename,
+      contentType,
+      sizeBytes,
+      submittedAt,
+    };
+
+    await env.CONTEST_BUCKET.put(pendingKey(entryId), JSON.stringify(pending), {
+      httpMetadata: { contentType: "application/json" },
+    });
+
+    log("upload_init", {
+      reqId,
+      entryId,
+      uploadId: multipart.uploadId,
+      sizeBytes,
+      contentType,
+      origin: request.headers.get("Origin"),
+    });
+
+    return jsonResponse(
+      {
+        ok: true,
+        entryId,
+        uploadId: multipart.uploadId,
+        partSize: PART_SIZE_BYTES,
+        reqId,
+      },
+      200,
+      cors,
+      reqId
+    );
+  } catch (err) {
+    await logFailure(env, reqId, "init_failed", { entryId, message: String(err) });
+    return jsonResponse({ error: "Could not start upload. Please try again.", reqId }, 500, cors, reqId);
+  }
+}
+
+async function handlePart(request: Request, env: Env, cors: Headers): Promise<Response> {
+  const reqId = requestId();
+  const url = new URL(request.url);
+  const entryId = url.searchParams.get("entryId") ?? "";
+  const uploadId = url.searchParams.get("uploadId") ?? "";
+  const partNumber = Number(url.searchParams.get("partNumber") ?? "0");
+
+  if (!entryId || !uploadId || !Number.isInteger(partNumber) || partNumber < 1) {
+    return jsonResponse({ error: "Missing entryId, uploadId, or partNumber.", reqId }, 400, cors, reqId);
+  }
+
+  const pending = await loadPending(env, entryId);
+  if (!pending || pending.uploadId !== uploadId) {
+    await logFailure(env, reqId, "part_unknown_upload", { entryId, uploadId, partNumber });
+    return jsonResponse({ error: "Upload session not found or expired. Please start over.", reqId }, 404, cors, reqId);
+  }
+
+  let data: ArrayBuffer;
+  try {
+    data = await request.arrayBuffer();
+  } catch (err) {
+    await logFailure(env, reqId, "part_read_failed", { entryId, partNumber, message: String(err) });
+    return jsonResponse({ error: "Could not read upload chunk.", reqId }, 400, cors, reqId);
+  }
+
+  if (data.byteLength === 0) {
+    return jsonResponse({ error: "Empty chunk.", reqId }, 400, cors, reqId);
+  }
+  if (data.byteLength > PART_SIZE_BYTES + 512 * 1024) {
+    return jsonResponse({ error: "Chunk too large.", reqId }, 413, cors, reqId);
+  }
+
+  try {
+    const multipart = env.CONTEST_BUCKET.resumeMultipartUpload(pending.videoKey, uploadId);
+    const part = await multipart.uploadPart(partNumber, data);
+    log("upload_part", { reqId, entryId, partNumber, bytes: data.byteLength });
+    return jsonResponse(
+      { ok: true, partNumber: part.partNumber, etag: part.etag, reqId },
+      200,
+      cors,
+      reqId
+    );
+  } catch (err) {
+    await logFailure(env, reqId, "part_upload_failed", {
+      entryId,
+      partNumber,
+      message: String(err),
+    });
+    return jsonResponse({ error: "Chunk upload failed. Please retry.", reqId }, 500, cors, reqId);
+  }
+}
+
+async function handleComplete(request: Request, env: Env, cors: Headers): Promise<Response> {
+  const reqId = requestId();
+  let body: { entryId?: string; uploadId?: string; parts?: { partNumber: number; etag: string }[] };
+  try {
+    body = (await request.json()) as typeof body;
+  } catch {
+    return jsonResponse({ error: "Invalid JSON body.", reqId }, 400, cors, reqId);
+  }
+
+  const entryId = String(body.entryId ?? "");
+  const uploadId = String(body.uploadId ?? "");
+  const parts = body.parts ?? [];
+
+  if (!entryId || !uploadId || !Array.isArray(parts) || parts.length === 0) {
+    return jsonResponse({ error: "Missing entryId, uploadId, or parts.", reqId }, 400, cors, reqId);
+  }
+
+  const pending = await loadPending(env, entryId);
+  if (!pending || pending.uploadId !== uploadId) {
+    await logFailure(env, reqId, "complete_unknown_upload", { entryId, uploadId });
+    return jsonResponse({ error: "Upload session not found. Please start over.", reqId }, 404, cors, reqId);
+  }
+
+  const metaKey = `entries/${entryId}/metadata.json`;
   const metadata = {
     entryId,
-    submittedAt,
-    name,
-    email,
-    about: about || null,
-    originalFilename: video.name,
-    contentType: type,
-    sizeBytes: video.size,
+    submittedAt: pending.submittedAt,
+    completedAt: new Date().toISOString(),
+    name: pending.name,
+    email: pending.email,
+    about: pending.about,
+    originalFilename: pending.originalFilename,
+    contentType: pending.contentType,
+    sizeBytes: pending.sizeBytes,
     userAgent: request.headers.get("User-Agent"),
+    partCount: parts.length,
   };
 
   try {
-    await env.CONTEST_BUCKET.put(videoKey, video.stream(), {
-      httpMetadata: { contentType: type },
-      customMetadata: {
-        entryId,
-        name,
-        submittedAt,
-      },
-    });
+    const multipart = env.CONTEST_BUCKET.resumeMultipartUpload(pending.videoKey, uploadId);
+    await multipart.complete(
+      parts.map((p) => ({ partNumber: Number(p.partNumber), etag: String(p.etag) }))
+    );
 
     await env.CONTEST_BUCKET.put(metaKey, JSON.stringify(metadata, null, 2), {
       httpMetadata: { contentType: "application/json" },
     });
-  } catch (err) {
-    console.error("R2 upload failed", err);
-    return jsonResponse({ error: "Upload failed. Please try again." }, 500, cors);
-  }
+    await env.CONTEST_BUCKET.delete(pendingKey(entryId));
 
-  return jsonResponse({ ok: true, entryId }, 201, cors);
+    log("upload_complete", { reqId, entryId, partCount: parts.length, sizeBytes: pending.sizeBytes });
+    return jsonResponse({ ok: true, entryId, reqId }, 201, cors, reqId);
+  } catch (err) {
+    await logFailure(env, reqId, "complete_failed", { entryId, message: String(err) });
+    return jsonResponse({ error: "Could not finalize upload. Please try again.", reqId }, 500, cors, reqId);
+  }
 }
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const cors = corsHeaders(request, env);
+    const origin = request.headers.get("Origin") ?? "";
 
     if (request.method === "OPTIONS") {
+      if (origin && !isAllowedOrigin(origin, env)) {
+        return new Response(null, { status: 403, headers: cors });
+      }
       return new Response(null, { status: 204, headers: cors });
+    }
+
+    if (origin && !isAllowedOrigin(origin, env)) {
+      log("cors_rejected", { origin, path: new URL(request.url).pathname });
+      return jsonResponse({ error: "Origin not allowed.", origin }, 403, cors);
     }
 
     const url = new URL(request.url);
@@ -179,7 +376,14 @@ export default {
         {
           ok: true,
           service: "vestgaard-contest-upload",
-          endpoints: { health: "GET /health", upload: "POST /upload" },
+          endpoints: {
+            health: "GET /health",
+            init: "POST /upload/init",
+            part: "POST /upload/part?entryId=&uploadId=&partNumber=",
+            complete: "POST /upload/complete",
+          },
+          partSizeBytes: PART_SIZE_BYTES,
+          maxUploadMb: env.MAX_UPLOAD_MB ?? "100",
         },
         200,
         cors
@@ -187,11 +391,19 @@ export default {
     }
 
     if (url.pathname === "/health" && request.method === "GET") {
-      return jsonResponse({ ok: true }, 200, cors);
+      return jsonResponse({ ok: true, bucket: !!env.CONTEST_BUCKET }, 200, cors);
     }
 
-    if (url.pathname === "/upload" && request.method === "POST") {
-      return handleUpload(request, env, cors);
+    if (url.pathname === "/upload/init" && request.method === "POST") {
+      return handleInit(request, env, cors);
+    }
+
+    if (url.pathname === "/upload/part" && request.method === "POST") {
+      return handlePart(request, env, cors);
+    }
+
+    if (url.pathname === "/upload/complete" && request.method === "POST") {
+      return handleComplete(request, env, cors);
     }
 
     return jsonResponse({ error: "Not found" }, 404, cors);
